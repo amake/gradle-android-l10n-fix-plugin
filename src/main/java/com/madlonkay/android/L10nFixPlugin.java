@@ -11,6 +11,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.logging.LogLevel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class L10nFixPlugin implements Plugin<Project> {
+    private static final LogLevel LOG_LEVEL = LogLevel.DEBUG;
     private static final String DEFAULT_LOCALE = "en";
     private static final Pattern LOCALE_RESOURCE_PATTERN = Pattern.compile(File.separatorChar + "res" + File.separatorChar + ".*-([a-z]{2}(?:-r[A-Z]{2})?|b(?:\\+[a-zA-Z]+)+)\\b");
     private static final String SUPPORTED_LOCALES_FIELD_NAME = "SUPPORTED_LOCALES";
@@ -40,7 +42,7 @@ public class L10nFixPlugin implements Plugin<Project> {
     private void doConfiguration(Project project, L10nFixExtension extension, DefaultConfig defaultConfig) {
         Set<String> resLocales = resolveLocales(project);
         defaultConfig.addResourceConfigurations(resLocales);
-        System.out.println("Resource configurations: " + defaultConfig.getResourceConfigurations());
+        project.getLogger().log(LOG_LEVEL, "Resource configurations: " + defaultConfig.getResourceConfigurations());
 
         // The rest must be done after evaluation so that the extension can be initialized
         project.afterEvaluate(p -> {
@@ -55,7 +57,7 @@ public class L10nFixPlugin implements Plugin<Project> {
             String fieldValue = toArrayLiteral(bcp47Locales);
             ClassField field = new ClassFieldImpl(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
             defaultConfig.addBuildConfigField(field);
-            System.out.println(SUPPORTED_LOCALES_FIELD_NAME + ": " + fieldValue);
+            p.getLogger().log(LOG_LEVEL, SUPPORTED_LOCALES_FIELD_NAME + " = " + fieldValue);
         });
     }
 
@@ -63,13 +65,13 @@ public class L10nFixPlugin implements Plugin<Project> {
         Set<String> result = new HashSet<>();
         ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
         tree.include("**/res/**");
-        System.out.println("File tree: " + tree);
+        project.getLogger().log(LOG_LEVEL, "Inspecting file tree: " + tree);
         for (File file : tree.getFiles()) {
             if (file.getPath().startsWith(project.getBuildDir().getPath())) {
                 continue;
             }
-            System.out.println("Inspecting file: " + file);
             String locale = resolveLocale(file.getPath());
+            project.getLogger().log(LOG_LEVEL, file + " -> " + locale);
             if (locale != null) {
                 result.add(locale);
             }

@@ -8,7 +8,6 @@ public class L10nFixExtension {
     }
 
     public void setDefaultLocale(String defaultLocale) {
-        System.out.println("Setting default language: " + defaultLocale);
         this.defaultLocale = defaultLocale;
     }
 }
