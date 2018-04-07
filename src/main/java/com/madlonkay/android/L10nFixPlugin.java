@@ -69,12 +69,21 @@ public class L10nFixPlugin implements Plugin<Project> {
                 continue;
             }
             System.out.println("Inspecting file: " + file);
-            Matcher m = LOCALE_RESOURCE_PATTERN.matcher(file.getPath());
-            if (m.find()) {
-                result.add(m.group(1));
+            String locale = resolveLocale(file.getPath());
+            if (locale != null) {
+                result.add(locale);
             }
         }
         return result;
+    }
+
+    private String resolveLocale(CharSequence path) {
+        Matcher m = LOCALE_RESOURCE_PATTERN.matcher(path);
+        if (m.find()) {
+            return m.group(1);
+        } else {
+            return null;
+        }
     }
 
     private Set<String> convertToBcp47(Collection<String> resLocales) {
