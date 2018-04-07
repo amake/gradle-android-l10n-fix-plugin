@@ -45,7 +45,10 @@ public class L10nFixPlugin implements Plugin<Project> {
         // The rest must be done after evaluation so that the extension can be initialized
         project.afterEvaluate(p -> {
             List<String> bcp47Locales = new ArrayList<>(convertToBcp47(resLocales));
-            String defaultLocale = extension.defaultLocale == null ? DEFAULT_LOCALE : extension.defaultLocale;
+            String defaultLocale = extension.getDefaultLocale();
+            if (defaultLocale == null) {
+                defaultLocale = DEFAULT_LOCALE;
+            }
             bcp47Locales.add(defaultLocale);
             bcp47Locales.sort(Comparator.naturalOrder());
 

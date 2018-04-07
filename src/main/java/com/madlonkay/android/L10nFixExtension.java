@@ -1,7 +1,7 @@
 package com.madlonkay.android;
 
 public class L10nFixExtension {
-    public String defaultLocale;
+    private String defaultLocale;
 
     public String getDefaultLocale() {
         return defaultLocale;
