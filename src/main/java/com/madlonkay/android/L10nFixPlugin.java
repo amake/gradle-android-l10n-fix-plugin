@@ -61,7 +61,7 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     private Set<String> resolveLocales(Project project) {
         Set<String> result = new HashSet<>();
-        ConfigurableFileTree tree = project.fileTree(project.getRootDir());
+        ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
         tree.include("**/res/**");
         System.out.println("File tree: " + tree);
         for (File file : tree.getFiles()) {
