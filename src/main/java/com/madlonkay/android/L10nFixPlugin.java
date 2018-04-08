@@ -29,12 +29,14 @@ public class L10nFixPlugin implements Plugin<Project> {
     public void apply(Project project) {
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
-        Action<BasePlugin> action = plugin -> doConfiguration(project, extension, plugin.getExtension().getDefaultConfig());
+        Action<BasePlugin> action = plugin -> doConfiguration(project, extension, plugin);
         project.getPlugins().withType(AppPlugin.class, action);
         project.getPlugins().withType(LibraryPlugin.class, action);
     }
 
-    private void doConfiguration(Project project, L10nFixExtension extension, DefaultConfig defaultConfig) {
+    private void doConfiguration(Project project, L10nFixExtension extension, BasePlugin<?> plugin) {
+        DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
+
         // This must be done earlier than `afterEvaluate` in order to take effect.
         // TODO: Figure out just how late we can do this
         Set<String> resLocales = resolveLocales(project);
