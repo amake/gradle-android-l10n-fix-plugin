@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
+. gradle.properties
+
 cd integration
-../gradlew clean assembleDebug
+../gradlew clean -PPLUGIN_VERSION=$PLUGIN_VERSION assembleDebug test
 
 aapt=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/aapt
 

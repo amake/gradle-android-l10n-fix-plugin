@@ -13,7 +13,7 @@ gradlePlugin {
 }
 
 group = 'com.madlonkay.android'
-version = '1.0-SNAPSHOT'
+version = PLUGIN_VERSION
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
