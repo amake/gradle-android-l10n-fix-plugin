@@ -35,10 +35,13 @@ public class Util {
     }
 
     public static String toArrayLiteral(Collection<?> items) {
+        if (items.isEmpty()) {
+            return "{}";
+        }
         List<String> quoted = new ArrayList<>(items.size());
         for (Object item : items) {
             quoted.add('"' + item.toString() + '"');
         }
-        return '{' + String.join(", ", quoted) + '}';
+        return "{ " + String.join(", ", quoted) + " }";
     }
 }

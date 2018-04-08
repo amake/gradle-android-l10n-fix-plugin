@@ -28,7 +28,7 @@ public class UtilTest {
     @Test
     public void toArrayLiteral() {
         assertEquals("{}", Util.toArrayLiteral(Collections.emptyList()));
-        assertEquals("{\"foo\"}", Util.toArrayLiteral(Collections.singletonList("foo")));
-        assertEquals("{\"foo\", \"bar\"}", Util.toArrayLiteral(Arrays.asList("foo", "bar")));
+        assertEquals("{ \"foo\" }", Util.toArrayLiteral(Collections.singletonList("foo")));
+        assertEquals("{ \"foo\", \"bar\" }", Util.toArrayLiteral(Arrays.asList("foo", "bar")));
     }
 }
