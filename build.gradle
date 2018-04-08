@@ -20,7 +20,7 @@ targetCompatibility = 1.8
 
 dependencies {
     implementation 'com.android.tools.build:gradle:3.1.0'
-    implementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 }
 
 repositories {
