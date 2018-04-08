@@ -1,6 +1,7 @@
 plugins {
     id 'java-gradle-plugin'
     id 'maven-publish'
+    id 'com.gradle.plugin-publish' version "0.9.10"
 }
 
 gradlePlugin {
@@ -26,4 +27,18 @@ dependencies {
 repositories {
     jcenter()
     google()
+}
+
+pluginBundle {
+    website = 'https://github.com/amake/gradle-android-l10n-fix-plugin'
+    vcsUrl = 'https://github.com/amake/gradle-android-l10n-fix-plugin'
+    description = 'A plugin for fixing a common localization issue in Android projects'
+    tags = ['android', 'localization']
+
+    plugins {
+        l10nFixPlugin {
+            id = gradlePlugin.plugins.l10nFixPlugin.id
+            displayName = 'Gradle Android L10N Fix Plugin'
+        }
+    }
 }
