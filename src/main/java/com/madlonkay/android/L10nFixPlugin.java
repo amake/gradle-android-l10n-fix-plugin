@@ -41,7 +41,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         // TODO: Figure out just how late we can do this
         Set<String> resLocales = resolveLocales(project);
         defaultConfig.addResourceConfigurations(resLocales);
-        project.getLogger().log(LOG_LEVEL, "Resource configurations: " + defaultConfig.getResourceConfigurations());
+        project.getLogger().log(LOG_LEVEL, "Resource configurations: {}", defaultConfig.getResourceConfigurations());
 
         // The rest must be done after evaluation so that the extension can be initialized
         project.afterEvaluate(p -> {
@@ -56,7 +56,7 @@ public class L10nFixPlugin implements Plugin<Project> {
             String fieldValue = Util.toArrayLiteral(bcp47Locales);
             ClassField field = new ClassFieldImpl(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
             defaultConfig.addBuildConfigField(field);
-            p.getLogger().log(LOG_LEVEL, SUPPORTED_LOCALES_FIELD_NAME + " = " + fieldValue);
+            p.getLogger().log(LOG_LEVEL,  "{} = {}", SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
         });
     }
 
@@ -64,13 +64,13 @@ public class L10nFixPlugin implements Plugin<Project> {
         Set<String> result = new HashSet<>();
         ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
         tree.include("**/res/**");
-        project.getLogger().log(LOG_LEVEL, "Inspecting file tree: " + tree);
+        project.getLogger().log(LOG_LEVEL, "Inspecting file tree: {}", tree);
         for (File file : tree.getFiles()) {
             if (file.getPath().startsWith(project.getBuildDir().getPath())) {
                 continue;
             }
             String locale = Util.resolveLocale(file.getPath());
-            project.getLogger().log(LOG_LEVEL, file + " -> " + locale);
+            project.getLogger().log(LOG_LEVEL, "{} -> {}", file, locale);
             if (locale != null) {
                 result.add(locale);
             }
