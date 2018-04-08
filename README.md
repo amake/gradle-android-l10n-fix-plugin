@@ -1,16 +1,21 @@
 # Gradle Android L10N Fix Plugin
 
 This plugin fixes the [compile-time language resource contamination
-problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#compile-time-contamination). It
-inspects your `res` folder hierarchy to detect what locales your app supports,
-and filters out unwanted locales by setting the appropriate
+problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#compile-time-contamination),
+which breaks display-language fallback according to user preferences on Android
+7.
+
+The plugin works by inspecting your `res` folder hierarchy to detect what
+locales your app supports, and filters out unwanted locales by setting the
+appropriate
 [`resConfig`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.DefaultConfig.html#com.android.build.gradle.internal.dsl.DefaultConfig:resConfig%28java.lang.String%29)
 filters.
 
 Additionally it generates an array of supported locales accessible at runtime
 via `BuildConfig.SUPPORTED_LOCALES`. You can use this to fix the [runtime
 resource contamination
-problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#runtime-contamination).
+problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#runtime-contamination)
+caused by the Chrome WebView in Android 7.
 
 ## Do I need this?
 
