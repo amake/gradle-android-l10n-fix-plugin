@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -85,6 +86,9 @@ public class L10nFixPlugin implements Plugin<Project> {
         Set<String> result = new HashSet<>();
         for (AndroidSourceSet sourceSet : plugin.getExtension().getSourceSets()) {
             AndroidSourceDirectorySet res = sourceSet.getRes();
+            if (sourceSet.getName().toLowerCase(Locale.ENGLISH).contains("test")) {
+                continue;
+            }
             project.getLogger().log(LOG_LEVEL, "Inspecting {} {}", project.getName(), res.getName());
             for (File file : res.getSourceFiles()) {
                 String locale = Util.resolveLocale(file.getPath());
