@@ -126,12 +126,15 @@ $ $ANDROID_HOME/build-tools/27.0.3/aapt d --values resources app/build/outputs/a
 
 1. Add the plugin to your root project
    ([instructions](https://plugins.gradle.org/plugin/com.madlonkay.android-l10n-fix))
-2. Apply the plugin to your Android app or library. This is the project to which
-   the `com.android.*` plugin is applied.
+2. Apply the plugin to your Android projects. These are any projects to which
+   a `com.android.*` plugin is applied.
     ```
-    // Make sure this comes *after* the Android plugin is applied
     apply plugin: 'com.madlonkay.android-l10n-fix'
     ```
+   Note:
+    - This plugin should be applied *after* the Android plugin
+    - Apply this plugin to all Android projects that have locale-specific
+      resources
 3. Optionally configure the plugin with a `l10n` block. See below for options.
 
 ## Configuration
