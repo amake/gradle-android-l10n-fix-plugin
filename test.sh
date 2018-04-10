@@ -15,10 +15,6 @@ function die() {
 }
 
 $aapt d --values resources app/build/outputs/apk/debug/app-debug.apk resources.arsc |
-    grep -F "type 10 configCount=5" || die "APK had wrong number of language resources"
-
-grep -F 'SUPPORTED_LOCALES = { "de", "en", "es-MX", "fr", "ja", "sr-Latn" };' \
-    app/build/generated/source/buildConfig/debug/org/madlonkay/testapp/BuildConfig.java ||
-    die "BuildConfig.SUPPORTED_LOCALES is missing or incorrect"
+    grep -F "type 10 configCount=6" || die "APK had wrong number of language resources"
 
 echo "Tests complete"
