@@ -1,9 +1,9 @@
 package org.madlonkay.testapp;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+
+public class MainActivity extends L10nActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
