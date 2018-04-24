@@ -96,7 +96,7 @@ public class L10nFixPlugin implements Plugin<Project> {
             }
             project.getLogger().log(LOG_LEVEL, "Inspecting {} {}", project.getName(), res.getName());
             for (File file : res.getSourceFiles()) {
-                String locale = Util.resolveLocale(file.getPath());
+                String locale = Util.resolveLocale(file);
                 project.getLogger().log(LOG_LEVEL, "{} -> {}", file, locale);
                 if (locale != null) {
                     result.add(locale);

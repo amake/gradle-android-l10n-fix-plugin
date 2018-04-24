@@ -6,17 +6,22 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Util {
 
-    private static final Pattern LOCALE_RESOURCE_PATTERN = Pattern.compile(File.separatorChar + "res" + File.separatorChar + ".*-([a-z]{2}(?:-r[A-Z]{2})?|b(?:\\+[a-zA-Z]+)+)\\b");
+    private static final String LOCALE_PREFIX = "values-";
 
-    public static String resolveLocale(CharSequence path) {
-        Matcher m = LOCALE_RESOURCE_PATTERN.matcher(path);
-        if (m.find()) {
-            return m.group(1);
+    public static String resolveLocale(File file) {
+        String result = resolveLocale(file.getName());
+        if (result == null) {
+            result = resolveLocale(file.getParentFile().getName());
+        }
+        return result;
+    }
+
+    private static String resolveLocale(String path) {
+        if (path.startsWith(LOCALE_PREFIX)) {
+            return path.substring(LOCALE_PREFIX.length());
         } else {
             return null;
         }
