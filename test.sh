@@ -14,7 +14,12 @@ function die() {
     exit 1
 }
 
-$aapt d --values resources app/build/outputs/apk/debug/app-debug.apk resources.arsc |
-    grep -F "type 10 configCount=6" || die "APK had wrong number of language resources"
+function resgrep() {
+    $aapt d --values resources app/build/outputs/apk/debug/app-debug.apk resources.arsc |
+        grep -F "$1"
+}
+
+resgrep "type 10 configCount=6" ||
+    (resgrep "config" && die "APK had wrong number of language resources")
 
 echo "Tests complete"
