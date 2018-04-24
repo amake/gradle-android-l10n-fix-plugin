@@ -43,6 +43,9 @@ public class L10nFixPlugin implements Plugin<Project> {
         // Apply appropriate resConfigs to all projects
         iterProjects(project, (proj, plugin) -> setResConfigs(proj, plugin, resLocales));
 
+        // Add generate task only if this is the app
+        project.getPlugins().withType(AppPlugin.class, plugin -> addGenerateActivityTask(project, plugin));
+
         // The rest must be done after evaluation so that the extension can be initialized
         iterPlugins(project, (proj, plugin) -> proj.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
     }
@@ -104,5 +107,16 @@ public class L10nFixPlugin implements Plugin<Project> {
             }
         }
         return result;
+    }
+
+    private void addGenerateActivityTask(Project project, AppPlugin plugin) {
+        GenerateActivityTask task = project.getTasks().create(GenerateActivityTask.GENERATE_ACTIVITY_TASK_NAME, GenerateActivityTask.class);
+        AndroidSourceSet sourceSet = plugin.getExtension().getSourceSets().getByName("main");
+        sourceSet.getJava().srcDir(task.getOutputDirectory());
+        project.getTasks().getByName("preBuild").getInputs().files(task.getOutputs());
+        project.afterEvaluate(proj ->
+                proj.getPlugins().withType(AppPlugin.class, plug ->
+                        proj.getTasks().withType(GenerateActivityTask.class, t ->
+                                t.getInputs().property("applicationId", plug.getExtension().getDefaultConfig().getApplicationId()))));
     }
 }
