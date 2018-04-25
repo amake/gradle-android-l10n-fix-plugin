@@ -6,6 +6,7 @@ import com.android.build.gradle.LibraryPlugin;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ClassField;
 
@@ -114,9 +115,12 @@ public class L10nFixPlugin implements Plugin<Project> {
         AndroidSourceSet sourceSet = plugin.getExtension().getSourceSets().getByName("main");
         sourceSet.getJava().srcDir(task.getOutputDirectory());
         project.getTasks().getByName("preBuild").getInputs().files(task.getOutputs());
-        project.afterEvaluate(proj ->
-                proj.getPlugins().withType(AppPlugin.class, plug ->
-                        proj.getTasks().withType(GenerateActivityTask.class, t ->
-                                t.getInputs().property("applicationId", plug.getExtension().getDefaultConfig().getApplicationId()))));
+        project.getGradle().getTaskGraph().whenReady(graph -> {
+            for (GenerateBuildConfig genBuildConfigTask : project.getTasks().withType(GenerateBuildConfig.class)) {
+                if (graph.hasTask(genBuildConfigTask)) {
+                    task.setBuildConfigPackageName(genBuildConfigTask.getBuildConfigPackageName());
+                }
+            }
+        });
     }
 }

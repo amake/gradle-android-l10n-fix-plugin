@@ -1,6 +1,5 @@
 package com.madlonkay.android;
 
-import com.android.build.gradle.AppPlugin;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
@@ -9,6 +8,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -26,6 +26,17 @@ public class GenerateActivityTask extends DefaultTask {
 
     public static final String GENERATE_ACTIVITY_TASK_NAME = "generateL10nFixActivity";
 
+    private String buildConfigPackageName;
+
+    @Input
+    public String getBuildConfigPackageName() {
+        return buildConfigPackageName;
+    }
+
+    public void setBuildConfigPackageName(String buildConfigPackageName) {
+        this.buildConfigPackageName = buildConfigPackageName;
+    }
+
     @OutputDirectory
     public File getOutputDirectory() {
         return new File(getProject().getBuildDir(), "generated/source/l10nFix");
@@ -33,13 +44,9 @@ public class GenerateActivityTask extends DefaultTask {
 
     @TaskAction
     public void generate() throws IOException {
-        String applicationId = null;
-        for (AppPlugin plugin : getProject().getPlugins().withType(AppPlugin.class)) {
-            applicationId = plugin.getExtension().getDefaultConfig().getApplicationId();
-        }
-        Objects.requireNonNull(applicationId, "Could not determine the Android app's applicationId");
+        Objects.requireNonNull(buildConfigPackageName, "Could not determine the app's buildConfigPackageName");
 
-        ClassName buildConfig = ClassName.get(applicationId, "BuildConfig");
+        ClassName buildConfig = ClassName.get(buildConfigPackageName, "BuildConfig");
         ClassName activity = ClassName.get("android.support.v7.app", "AppCompatActivity");
         ClassName context = ClassName.get("android.content", "Context");
         ClassName configuration = ClassName.get("android.content.res", "Configuration");
@@ -119,7 +126,7 @@ public class GenerateActivityTask extends DefaultTask {
                 .addMethod(fixLocales)
                 .build();
 
-        JavaFile.builder(applicationId, l10nUtil)
+        JavaFile.builder(buildConfigPackageName, l10nUtil)
                 .build()
                 .writeTo(getOutputDirectory());
 
@@ -148,7 +155,7 @@ public class GenerateActivityTask extends DefaultTask {
                 .addMethod(attachBaseContext)
                 .build();
 
-        JavaFile.builder(applicationId, l10nActivity)
+        JavaFile.builder(buildConfigPackageName, l10nActivity)
                 .build()
                 .writeTo(getOutputDirectory());
     }
