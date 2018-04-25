@@ -61,6 +61,7 @@ public class GenerateActivityTask extends DefaultTask {
                 .build();
 
         MethodSpec isSupportedLocale = MethodSpec.methodBuilder("isSupportedLocale")
+                .addJavadoc("Whether or not the specified {@code $T} is supported by this app.", Locale.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(boolean.class)
                 .addAnnotation(requiresApiN)
@@ -75,6 +76,7 @@ public class GenerateActivityTask extends DefaultTask {
                 .build();
 
         MethodSpec filterUnsupportedLocales = MethodSpec.methodBuilder("filterUnsupportedLocales")
+                .addJavadoc("Remove locales not supported by this app from the provided {@code LocaleList}.")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(localeList)
                 .addAnnotation(requiresApiLollipop)
@@ -90,6 +92,8 @@ public class GenerateActivityTask extends DefaultTask {
                 .build();
 
         MethodSpec fixLocales = MethodSpec.methodBuilder("fixLocales")
+                .addJavadoc("Fix the specified {@code $T} to ensure that it only has locales supported by this app.", resources)
+                .addJavadoc("Call this after runtime contamination, e.g. after loading {@code WebView}. ")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class)
                 .addAnnotation(requiresApiN)
