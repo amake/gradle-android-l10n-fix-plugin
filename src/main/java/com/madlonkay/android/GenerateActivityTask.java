@@ -90,11 +90,11 @@ public class GenerateActivityTask extends DefaultTask {
                 .build();
 
         MethodSpec fixLocales = MethodSpec.methodBuilder("fixLocales")
-                .addModifiers(Modifier.PUBLIC)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class)
                 .addAnnotation(requiresApiN)
                 .addAnnotation(suppressDeprecation)
-                .addStatement("$T resources = getResources()", resources)
+                .addParameter(resources, "resources")
                 .addStatement("$T config = resources.getConfiguration()", configuration)
                 .addStatement("$T currentLocales = config.getLocales()", localeList)
                 .beginControlFlow("if (!$N(currentLocales.get(0)))", isSupportedLocale)
@@ -108,6 +108,17 @@ public class GenerateActivityTask extends DefaultTask {
                 .endControlFlow()
                 .build();
 
+        TypeSpec l10nUtil = TypeSpec.classBuilder("L10nUtil")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addMethod(isSupportedLocale)
+                .addMethod(filterUnsupportedLocales)
+                .addMethod(fixLocales)
+                .build();
+
+        JavaFile.builder(applicationId, l10nUtil)
+                .build()
+                .writeTo(getOutputDirectory());
+
         MethodSpec attachBaseContext = MethodSpec.methodBuilder("attachBaseContext")
                 .addModifiers(Modifier.PROTECTED)
                 .returns(void.class)
@@ -115,8 +126,8 @@ public class GenerateActivityTask extends DefaultTask {
                 .addParameter(context, "base")
                 .beginControlFlow("if ($T.VERSION.SDK_INT >= $T.VERSION_CODES.N)", build, build)
                     .addStatement("$T currentLocales = base.getResources().getConfiguration().getLocales()", localeList)
-                        .beginControlFlow("if (!$N(currentLocales.get(0)))", isSupportedLocale)
-                            .addStatement("$T supportedLocales = $N(currentLocales)", localeList, filterUnsupportedLocales)
+                        .beginControlFlow("if (!$N.$N(currentLocales.get(0)))", l10nUtil, isSupportedLocale)
+                            .addStatement("$T supportedLocales = $N.$N(currentLocales)", localeList, l10nUtil, filterUnsupportedLocales)
                             .beginControlFlow("if (!supportedLocales.isEmpty())")
                                 .addStatement("$T config = new $T()", configuration, configuration)
                                 .addStatement("config.setLocales(supportedLocales)")
@@ -130,14 +141,11 @@ public class GenerateActivityTask extends DefaultTask {
         TypeSpec l10nActivity = TypeSpec.classBuilder("L10nActivity")
                 .superclass(activity)
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .addMethod(isSupportedLocale)
-                .addMethod(filterUnsupportedLocales)
-                .addMethod(fixLocales)
                 .addMethod(attachBaseContext)
                 .build();
 
-        JavaFile javaFile = JavaFile.builder(applicationId, l10nActivity)
-                .build();
-        javaFile.writeTo(getOutputDirectory());
+        JavaFile.builder(applicationId, l10nActivity)
+                .build()
+                .writeTo(getOutputDirectory());
     }
 }
