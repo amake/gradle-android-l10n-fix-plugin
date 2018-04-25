@@ -1,26 +1,20 @@
 # Gradle Android L10N Fix Plugin
 
-This plugin fixes the [compile-time language resource contamination
-problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#compile-time-contamination),
-which breaks display-language fallback according to user preferences on Android
-7.
-
-The plugin works by inspecting your `res` folder hierarchy to detect what
-locales your app supports, and filters out unwanted locales by setting the
-appropriate
-[`resConfig`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.DefaultConfig.html#com.android.build.gradle.internal.dsl.DefaultConfig:resConfig%28java.lang.String%29)
-filters.
-
-Additionally it generates an array of supported locales accessible at runtime
-via `BuildConfig.SUPPORTED_LOCALES`. You can use this to fix the [runtime
+This plugin provides solutions for the [compile-time and runtime language
 resource contamination
-problem](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce#runtime-contamination)
-caused by the Chrome WebView in Android 7.
+problems](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce) that
+break display-language fallback according to user preferences on Android 7 and
+later.
 
 ## Do I need this?
 
-- Does your app support more than one locale (language)?
+- Does your app run on Android 7 (SDK 24) or later?
+- Does your app support more than one display language?
 - Do you use the AppCompat library? Any Google Play Services libraries?
+
+If so, your app probably suffers from [language resource
+contamination](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce),
+which prevents some users from seeing the app in their preferred language.
 
 Go check how many localizations Google thinks you support on the Google Play Console:
 
@@ -42,85 +36,44 @@ $ $ANDROID_HOME/build-tools/27.0.3/aapt d --values resources app/build/outputs/a
       config ar:
       config az:
       config b+sr+Latn:
-      config be:
-      config bg:
-      config bn:
-      config bs:
-      config ca:
-      config cs:
-      config da:
-      config de:
-      config el:
-      config en-rAU:
-      config en-rCA:
-      config en-rGB:
-      config en-rIN:
-      config en-rXC:
-      config es-rUS:
-      config es:
-      config et:
-      config eu:
-      config fa:
-      config fi:
-      config fr-rCA:
-      config fr:
-      config gl:
-      config gu:
-      config hi:
-      config hr:
-      config hu:
-      config hy:
-      config in:
-      config is:
-      config it:
-      config iw:
-      config ja:
-      config ka:
-      config kk:
-      config km:
-      config kn:
-      config ko:
-      config ky:
-      config lo:
-      config lt:
-      config lv:
-      config mk:
-      config ml:
-      config mn:
-      config mr:
-      config ms:
-      config my:
-      config nb:
-      config ne:
-      config nl:
-      config pa:
-      config pl:
-      config pt-rBR:
-      config pt-rPT:
-      config pt:
-      config ro:
-      config ru:
-      config si:
-      config sk:
-      config sl:
-      config sq:
-      config sr:
-      config sv:
-      config sw:
-      config ta:
-      config te:
-      config th:
-      config tl:
-      config tr:
-      config uk:
-      config ur:
-      config uz:
-      config vi:
-      config zh-rCN:
-      config zh-rHK:
-      config zh-rTW:
-      config zu:
+      ⋮
+      (plus 78 more)
 ```
+
+## How does it work?
+
+### Compile-time contamination fix
+
+The compile-time fix is essentially a reimplementation of [`resConfig
+'auto'`](https://google.github.io/android-gradle-dsl/3.1/com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:resConfig%28java.lang.String%29),
+which was [deprecated in Android Gradle Plugin
+3.1](https://android.googlesource.com/platform/tools/base/+/6b7799c36f1ba5194f73f5c14a7b0365a8428714%5E%21/)
+due to "issues with multi-module projects"*.
+
+The plugin works by inspecting your `res` folder hierarchy to detect what
+locales your app supports, and filters out unwanted locales by setting the
+appropriate `resConfig` filters.
+
+\*It's not clear exactly what the issues with `resConfig 'auto'` were, but this
+plugin has been tested with multi-module projects and works correctly in that it
+picks up all locales across all modules.
+
+### Runtime contamination fix
+
+The plugin offers two facilities for dealing with runtime resource contamination
+from e.g. referencing the Chrome-based
+[WebView](https://developer.android.com/reference/android/webkit/WebView.html)
+class:
+
+- `L10nActivity`: An `Activity` class that ensures that only supported locales
+  are held by its base context. This is needed to keep locales correct after
+  configuration changes such as device rotation.
+- `L10nUtil`: A utility class offering static methods for dealing with supported
+  locales, most importantly:
+  - `fixLocales(Resources)`: Call this on your activity's resources immediately
+    after referencing `WebView` to restore the correct locales.
+
+The above features are backed by `BuildConfig.SUPPORTED_LOCALES`, an array of supported locales generated from the information collected for the compile-time contamination fix.
 
 ## Usage
 
@@ -131,11 +84,16 @@ $ $ANDROID_HOME/build-tools/27.0.3/aapt d --values resources app/build/outputs/a
     ```
     apply plugin: 'com.madlonkay.android-l10n-fix'
     ```
-   Note:
+   This activates the compile-time fix. Note:
     - This plugin should be applied *after* the Android plugin
     - Apply this plugin to all Android projects that have locale-specific
       resources
-3. Optionally configure the plugin with a `l10n` block. See below for options.
+3. (Optional) Configure the plugin with a `l10n` block. See below for options.
+4. To activate the runtime fix:
+   1. Make your `Activity` classes extend `L10nActivity`
+   2. Anywhere you first reference the `WebView` class (loading a layout
+      containing a `WebView`, using any `WebView` static methods), immediately
+      afterwards call `L10nUtil.fixLocales(getResources())`
 
 ## Configuration
 
