@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javax.lang.model.element.Modifier;
 
@@ -36,6 +37,7 @@ public class GenerateActivityTask extends DefaultTask {
         for (AppPlugin plugin : getProject().getPlugins().withType(AppPlugin.class)) {
             applicationId = plugin.getExtension().getDefaultConfig().getApplicationId();
         }
+        Objects.requireNonNull(applicationId, "Could not determine the Android app's applicationId");
 
         ClassName buildConfig = ClassName.get(applicationId, "BuildConfig");
         ClassName activity = ClassName.get("android.support.v7.app", "AppCompatActivity");
