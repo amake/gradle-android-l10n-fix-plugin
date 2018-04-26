@@ -32,4 +32,9 @@ public class UtilTest {
         assertEquals("{ \"foo\" }", Util.toArrayLiteral(Collections.singletonList("foo")));
         assertEquals("{ \"foo\", \"bar\" }", Util.toArrayLiteral(Arrays.asList("foo", "bar")));
     }
+
+    @Test
+    public void makeTaskName() {
+        assertEquals("generateFooBarBaz", Util.makeTaskName("generate", "foo", "bar", "baz"));
+    }
 }
