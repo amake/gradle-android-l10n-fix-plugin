@@ -10,8 +10,6 @@ import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.ClassField;
 
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Plugin;
@@ -58,7 +56,10 @@ public class L10nFixPlugin implements Plugin<Project> {
                 addGenerateCodeTask(project, variant));
 
         // The rest must be done after evaluation so that the extension can be initialized
-        iterPlugins(project, plugin -> project.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
+        project.afterEvaluate(proj ->
+                iterProjects(proj, p ->
+                        iterVariants(p, variant ->
+                                setBuildConfigField(p, extension, variant, resLocales))));
     }
 
     private void setResConfigs(Project project, BasePlugin<?> plugin, Set<String> resLocales) {
@@ -69,23 +70,19 @@ public class L10nFixPlugin implements Plugin<Project> {
         project.getLogger().log(LOG_LEVEL, "{} resource configurations: {}", project.getName(), defaultConfig.getResourceConfigurations());
     }
 
-    private void setBuildConfigField(Project project, L10nFixExtension extension, Set<String> resLocales) {
+    private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Set<String> resLocales) {
         String defaultLocale = extension.getDefaultLocale() != null ? extension.getDefaultLocale() : DEFAULT_LOCALE;
 
-        iterProjects(project, proj ->
-                iterPlugins(proj, plug -> {
-                    Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
-                    storedSupportedLocales.addAll(Util.toBcp47(resLocales));
-                    storedSupportedLocales.add(defaultLocale);
+        Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
+        storedSupportedLocales.addAll(Util.toBcp47(resLocales));
+        storedSupportedLocales.add(defaultLocale);
 
-                    List<String> bcp47Locales = new ArrayList<>(storedSupportedLocales);
-                    bcp47Locales.sort(Comparator.naturalOrder());
-                    String fieldValue = Util.toArrayLiteral(bcp47Locales);
-                    ClassField field = new ClassFieldImpl(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
+        List<String> bcp47Locales = new ArrayList<>(storedSupportedLocales);
+        bcp47Locales.sort(Comparator.naturalOrder());
+        String fieldValue = Util.toArrayLiteral(bcp47Locales);
 
-                    proj.getLogger().log(LOG_LEVEL, "{}: {} = {}", proj.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
-                    plug.getExtension().getDefaultConfig().addBuildConfigField(field);
-                }));
+        project.getLogger().log(LOG_LEVEL,  "{} ({}): {} = {}", project.getName(), variant.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
+        variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
     private Set<String> resolveLocales(Project project, BasePlugin<?> plugin) {
