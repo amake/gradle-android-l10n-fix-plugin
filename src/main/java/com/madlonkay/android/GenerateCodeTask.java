@@ -46,6 +46,9 @@ public class GenerateCodeTask extends DefaultTask {
     public void generate() throws IOException {
         Objects.requireNonNull(buildConfigPackageName, "Could not determine the app's buildConfigPackageName");
 
+        // Delete output dir in case package name changed, to prevent extraneous files
+        getProject().delete(getOutputDirectory());
+
         ClassName buildConfig = ClassName.get(buildConfigPackageName, "BuildConfig");
         ClassName activity = ClassName.get("android.support.v7.app", "AppCompatActivity");
         ClassName context = ClassName.get("android.content", "Context");
