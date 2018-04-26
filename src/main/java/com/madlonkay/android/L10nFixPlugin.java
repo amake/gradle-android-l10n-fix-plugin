@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class L10nFixPlugin implements Plugin<Project> {
-    private static final LogLevel LOG_LEVEL = LogLevel.DEBUG;
+    private static final String VERBOSITY_PROPERTY = "l10nFixVerbosity";
     private static final List<Class<? extends BasePlugin>> ANDROID_PLUGINS = Arrays.asList(AppPlugin.class, LibraryPlugin.class);
     private static final String DEFAULT_LOCALE = "en";
     private static final String SUPPORTED_LOCALES_FIELD_NAME = "SUPPORTED_LOCALES";
@@ -36,8 +36,12 @@ public class L10nFixPlugin implements Plugin<Project> {
     private static final Set<String> RES_LOCALES = new HashSet<>();
     private static final Set<String> SUPPORTED_LOCALES = new HashSet<>();
 
+    private int verbosity;
+
     @Override
     public void apply(Project project) {
+        verbosity = getVerbosity(project);
+
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
         // Find all locales indicated by resources in all projects
@@ -67,7 +71,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         storedResLocales.addAll(resLocales);
         DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
         defaultConfig.addResourceConfigurations(storedResLocales);
-        project.getLogger().log(LOG_LEVEL, "{} resource configurations: {}", project.getName(), defaultConfig.getResourceConfigurations());
+        logInfo(project, "{} resource configurations: {}", project.getName(), defaultConfig.getResourceConfigurations());
     }
 
     private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Set<String> resLocales) {
@@ -81,7 +85,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         bcp47Locales.sort(Comparator.naturalOrder());
         String fieldValue = Util.toArrayLiteral(bcp47Locales);
 
-        project.getLogger().log(LOG_LEVEL,  "{} ({}): {} = {}", project.getName(), variant.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
+        logInfo(project, "{} ({}): {} = {}", project.getName(), variant.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
@@ -92,10 +96,10 @@ public class L10nFixPlugin implements Plugin<Project> {
             if (sourceSet.getName().toLowerCase(Locale.ENGLISH).contains("test")) {
                 continue;
             }
-            project.getLogger().log(LOG_LEVEL, "Inspecting {} {}", project.getName(), res.getName());
+            logDebug(project, "Inspecting {} {}", project.getName(), res.getName());
             for (File file : res.getSourceFiles()) {
                 String locale = Util.resolveLocale(file);
-                project.getLogger().log(LOG_LEVEL, "{} -> {}", file, locale);
+                logDebug(project, "{} -> {}", file, locale);
                 if (locale != null) {
                     result.add(locale);
                 }
@@ -106,7 +110,7 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     private void addGenerateCodeTask(Project project, BaseVariant variant) {
         String taskName = Util.makeTaskName("generate", variant.getFlavorName(), variant.getBuildType().getName(), "L10nFix");
-        project.getLogger().log(LOG_LEVEL, "Generating task: {}", taskName);
+        logDebug(project, "Generating task: {}", taskName);
         GenerateCodeTask task = project.getTasks().create(taskName, GenerateCodeTask.class);
         task.setBuildConfigPackageName(variant.getGenerateBuildConfig().getBuildConfigPackageName());
         variant.registerJavaGeneratingTask(task, task.getOutputDirectory());
@@ -139,5 +143,34 @@ public class L10nFixPlugin implements Plugin<Project> {
             }
             variants.all(consumer::accept);
         });
+    }
+
+    private static int getVerbosity(Project project) {
+        Object rawValue = project.findProperty(VERBOSITY_PROPERTY);
+        int result = 0;
+        if (rawValue != null) {
+            try {
+                result = Integer.parseInt(rawValue.toString());
+            } catch (NumberFormatException ex) {
+                project.getLogger().warn("Could not parse " + VERBOSITY_PROPERTY + " as integer", ex);
+            }
+        }
+        return result;
+    }
+
+    private void logInfo(Project project, String format, Object... args) {
+        log(project, LogLevel.INFO, format, args);
+    }
+    private void logDebug(Project project, String format, Object... args) {
+        log(project, LogLevel.DEBUG, format, args);
+    }
+
+    private void log(Project project, LogLevel level, String format, Object... args) {
+        if (verbosity > 0) {
+            int adjustedLevelIndex = Arrays.binarySearch(LogLevel.values(), level) + verbosity;
+            adjustedLevelIndex = Math.max(0, Math.min(adjustedLevelIndex, LogLevel.values().length));
+            level = LogLevel.values()[adjustedLevelIndex];
+        }
+        project.getLogger().log(level, format, args);
     }
 }
