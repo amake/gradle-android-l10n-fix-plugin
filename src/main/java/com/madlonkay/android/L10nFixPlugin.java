@@ -40,7 +40,7 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        verbosity = getVerbosity(project);
+        verbosity = Util.readIntProperty(project, VERBOSITY_PROPERTY, 0);
 
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
@@ -143,19 +143,6 @@ public class L10nFixPlugin implements Plugin<Project> {
             }
             variants.all(consumer::accept);
         });
-    }
-
-    private static int getVerbosity(Project project) {
-        Object rawValue = project.findProperty(VERBOSITY_PROPERTY);
-        int result = 0;
-        if (rawValue != null) {
-            try {
-                result = Integer.parseInt(rawValue.toString());
-            } catch (NumberFormatException ex) {
-                project.getLogger().warn("Could not parse " + VERBOSITY_PROPERTY + " as integer", ex);
-            }
-        }
-        return result;
     }
 
     private void logInfo(Project project, String format, Object... args) {

@@ -2,6 +2,8 @@ package com.madlonkay.android;
 
 import com.android.utils.StringHelper;
 
+import org.gradle.api.Project;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,5 +60,22 @@ public class Util {
             StringHelper.appendCapitalized(sb, word);
         }
         return sb.toString();
+    }
+
+    static int readIntProperty(Project project, String key, int defaultValue) {
+        Object rawValue = project.findProperty(key);
+        int result = defaultValue;
+        if (rawValue != null) {
+            if (rawValue instanceof Number) {
+                result = ((Number) rawValue).intValue();
+            } else {
+                try {
+                    result = Integer.parseInt(rawValue.toString());
+                } catch (NumberFormatException ex) {
+                    project.getLogger().warn("Could not parse property {}={} as integer", key, rawValue);
+                }
+            }
+        }
+        return result;
     }
 }
