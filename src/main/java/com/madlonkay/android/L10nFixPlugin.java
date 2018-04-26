@@ -1,15 +1,20 @@
 package com.madlonkay.android;
 
+import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.AppPlugin;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.LibraryPlugin;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ClassField;
 
+import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.logging.LogLevel;
@@ -128,5 +133,20 @@ public class L10nFixPlugin implements Plugin<Project> {
                 consumer.accept(plugin);
             }
         }
+    }
+
+    private static void iterVariants(Project project, Consumer<BaseVariant> consumer) {
+        iterPlugins(project, plugin -> {
+            BaseExtension extension = plugin.getExtension();
+            DomainObjectSet<? extends BaseVariant> variants;
+            if (extension instanceof AppExtension) {
+                variants = ((AppExtension) extension).getApplicationVariants();
+            } else if (extension instanceof LibraryExtension) {
+                variants = ((LibraryExtension) extension).getLibraryVariants();
+            } else {
+                return;
+            }
+            variants.all(consumer::accept);
+        });
     }
 }
