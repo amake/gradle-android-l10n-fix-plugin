@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class L10nFixPlugin implements Plugin<Project> {
     private static final LogLevel LOG_LEVEL = LogLevel.DEBUG;
@@ -40,28 +40,32 @@ public class L10nFixPlugin implements Plugin<Project> {
 
         // Find all locales indicated by resources in all projects
         Set<String> resLocales = new HashSet<>();
-        iterProjects(project, (proj, plugin) -> resLocales.addAll(resolveLocales(proj, plugin)));
+        iterProjects(project, proj ->
+                iterPlugins(proj, plugin ->
+                        resLocales.addAll(resolveLocales(proj, plugin))));
 
         // Apply appropriate resConfigs to all projects
-        iterProjects(project, (proj, plugin) -> setResConfigs(proj, plugin, resLocales));
+        iterProjects(project, proj ->
+                iterPlugins(proj, plugin ->
+                        setResConfigs(proj, plugin, resLocales)));
 
         // Add generate task only if this is the app
         project.getPlugins().withType(AppPlugin.class, plugin -> addGenerateCodeTask(project, plugin));
 
         // The rest must be done after evaluation so that the extension can be initialized
-        iterPlugins(project, (proj, plugin) -> proj.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
+        iterPlugins(project, plugin -> project.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
     }
 
-    private void iterProjects(Project project, BiConsumer<Project, BasePlugin<?>> consumer) {
+    private void iterProjects(Project project, Consumer<Project> consumer) {
         for (Project p : project.getRootProject().getAllprojects()) {
-            iterPlugins(p, consumer);
+            consumer.accept(p);
         }
     }
 
-    private void iterPlugins(Project project, BiConsumer<Project, BasePlugin<?>> consumer) {
+    private void iterPlugins(Project project, Consumer<BasePlugin<?>> consumer) {
         for (Class<? extends BasePlugin> clazz : ANDROID_PLUGINS) {
             for (BasePlugin<?> plugin : project.getPlugins().withType(clazz)) {
-                consumer.accept(project, plugin);
+                consumer.accept(plugin);
             }
         }
     }
@@ -77,19 +81,20 @@ public class L10nFixPlugin implements Plugin<Project> {
     private void setBuildConfigField(Project project, L10nFixExtension extension, Set<String> resLocales) {
         String defaultLocale = extension.getDefaultLocale() != null ? extension.getDefaultLocale() : DEFAULT_LOCALE;
 
-        iterProjects(project, (proj, plug) -> {
-            Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
-            storedSupportedLocales.addAll(Util.toBcp47(resLocales));
-            storedSupportedLocales.add(defaultLocale);
+        iterProjects(project, proj ->
+                iterPlugins(proj, plug -> {
+                    Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
+                    storedSupportedLocales.addAll(Util.toBcp47(resLocales));
+                    storedSupportedLocales.add(defaultLocale);
 
-            List<String> bcp47Locales = new ArrayList<>(storedSupportedLocales);
-            bcp47Locales.sort(Comparator.naturalOrder());
-            String fieldValue = Util.toArrayLiteral(bcp47Locales);
-            ClassField field = new ClassFieldImpl(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
+                    List<String> bcp47Locales = new ArrayList<>(storedSupportedLocales);
+                    bcp47Locales.sort(Comparator.naturalOrder());
+                    String fieldValue = Util.toArrayLiteral(bcp47Locales);
+                    ClassField field = new ClassFieldImpl(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
 
-            proj.getLogger().log(LOG_LEVEL,  "{}: {} = {}", proj.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
-            plug.getExtension().getDefaultConfig().addBuildConfigField(field);
-        });
+                    proj.getLogger().log(LOG_LEVEL, "{}: {} = {}", proj.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
+                    plug.getExtension().getDefaultConfig().addBuildConfigField(field);
+                }));
     }
 
     private Set<String> resolveLocales(Project project, BasePlugin<?> plugin) {
