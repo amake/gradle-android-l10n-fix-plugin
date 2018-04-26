@@ -34,6 +34,7 @@ public class L10nFixPlugin implements Plugin<Project> {
     private static final Set<String> RES_LOCALES = new HashSet<>();
     private static final Set<String> SUPPORTED_LOCALES = new HashSet<>();
 
+    @Override
     public void apply(Project project) {
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
