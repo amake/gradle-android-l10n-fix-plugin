@@ -3,7 +3,7 @@ package org.madlonkay.testapp;
 import android.os.Bundle;
 
 
-public class MainActivity extends L10nActivity {
+public class MainActivity extends L10nFixActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

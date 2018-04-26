@@ -149,7 +149,7 @@ public class GenerateCodeTask extends DefaultTask {
                 .addStatement("super.attachBaseContext(base)")
                 .build();
 
-        TypeSpec l10nActivity = TypeSpec.classBuilder("L10nActivity")
+        TypeSpec l10nActivity = TypeSpec.classBuilder("L10nFixActivity")
                 .superclass(activity)
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
                 .addMethod(attachBaseContext)
