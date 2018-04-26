@@ -10,7 +10,6 @@ import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ClassField;
 
@@ -54,8 +53,9 @@ public class L10nFixPlugin implements Plugin<Project> {
                 iterPlugins(proj, plugin ->
                         setResConfigs(proj, plugin, resLocales)));
 
-        // Add generate task only if this is the app
-        project.getPlugins().withType(AppPlugin.class, plugin -> addGenerateCodeTask(project, plugin));
+        // Add code-generation tasks to all variants
+        iterVariants(project, variant ->
+                addGenerateCodeTask(project, variant));
 
         // The rest must be done after evaluation so that the extension can be initialized
         iterPlugins(project, plugin -> project.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
@@ -107,18 +107,12 @@ public class L10nFixPlugin implements Plugin<Project> {
         return result;
     }
 
-    private void addGenerateCodeTask(Project project, AppPlugin plugin) {
-        GenerateCodeTask task = project.getTasks().create(GenerateCodeTask.GENERATE_CODE_TASK_NAME, GenerateCodeTask.class);
-        AndroidSourceSet sourceSet = plugin.getExtension().getSourceSets().getByName("main");
-        sourceSet.getJava().srcDir(task.getOutputDirectory());
-        project.getTasks().getByName("preBuild").getInputs().files(task.getOutputs());
-        project.getGradle().getTaskGraph().whenReady(graph -> {
-            for (GenerateBuildConfig genBuildConfigTask : project.getTasks().withType(GenerateBuildConfig.class)) {
-                if (graph.hasTask(genBuildConfigTask)) {
-                    task.setBuildConfigPackageName(genBuildConfigTask.getBuildConfigPackageName());
-                }
-            }
-        });
+    private void addGenerateCodeTask(Project project, BaseVariant variant) {
+        String taskName = Util.makeTaskName("generate", variant.getFlavorName(), variant.getBuildType().getName(), "L10nFix");
+        project.getLogger().log(LOG_LEVEL, "Generating task: {}", taskName);
+        GenerateCodeTask task = project.getTasks().create(taskName, GenerateCodeTask.class);
+        task.setBuildConfigPackageName(variant.getGenerateBuildConfig().getBuildConfigPackageName());
+        variant.registerJavaGeneratingTask(task, task.getOutputDirectory());
     }
 
     private static void iterProjects(Project project, Consumer<Project> consumer) {

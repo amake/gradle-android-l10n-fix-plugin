@@ -24,8 +24,6 @@ import javax.lang.model.element.Modifier;
 
 public class GenerateCodeTask extends DefaultTask {
 
-    public static final String GENERATE_CODE_TASK_NAME = "generateL10nFix";
-
     private String buildConfigPackageName;
 
     @Input
