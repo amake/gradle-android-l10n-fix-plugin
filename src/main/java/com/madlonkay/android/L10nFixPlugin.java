@@ -56,20 +56,6 @@ public class L10nFixPlugin implements Plugin<Project> {
         iterPlugins(project, plugin -> project.afterEvaluate(p -> setBuildConfigField(p, extension, resLocales)));
     }
 
-    private void iterProjects(Project project, Consumer<Project> consumer) {
-        for (Project p : project.getRootProject().getAllprojects()) {
-            consumer.accept(p);
-        }
-    }
-
-    private void iterPlugins(Project project, Consumer<BasePlugin<?>> consumer) {
-        for (Class<? extends BasePlugin> clazz : ANDROID_PLUGINS) {
-            for (BasePlugin<?> plugin : project.getPlugins().withType(clazz)) {
-                consumer.accept(plugin);
-            }
-        }
-    }
-
     private void setResConfigs(Project project, BasePlugin<?> plugin, Set<String> resLocales) {
         Set<String> storedResLocales = RES_LOCALES;
         storedResLocales.addAll(resLocales);
@@ -128,5 +114,19 @@ public class L10nFixPlugin implements Plugin<Project> {
                 }
             }
         });
+    }
+
+    private static void iterProjects(Project project, Consumer<Project> consumer) {
+        for (Project p : project.getRootProject().getAllprojects()) {
+            consumer.accept(p);
+        }
+    }
+
+    private static void iterPlugins(Project project, Consumer<BasePlugin<?>> consumer) {
+        for (Class<? extends BasePlugin> clazz : ANDROID_PLUGINS) {
+            for (BasePlugin<?> plugin : project.getPlugins().withType(clazz)) {
+                consumer.accept(plugin);
+            }
+        }
     }
 }
