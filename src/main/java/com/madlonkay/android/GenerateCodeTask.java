@@ -22,9 +22,9 @@ import java.util.Objects;
 import javax.lang.model.element.Modifier;
 
 
-public class GenerateActivityTask extends DefaultTask {
+public class GenerateCodeTask extends DefaultTask {
 
-    public static final String GENERATE_ACTIVITY_TASK_NAME = "generateL10nFixActivity";
+    public static final String GENERATE_CODE_TASK_NAME = "generateL10nFix";
 
     private String buildConfigPackageName;
 
