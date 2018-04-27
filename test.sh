@@ -3,7 +3,8 @@
 set -euo pipefail
 
 cd integration
-../gradlew -Pl10nFixVerbosity=1 clean assembleDebug test --stacktrace
+../gradlew clean
+../gradlew -Pl10nFixVerbosity=1 assembleDebug test --stacktrace
 
 aapt=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/aapt
 
