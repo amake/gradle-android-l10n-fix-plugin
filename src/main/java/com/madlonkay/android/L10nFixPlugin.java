@@ -36,7 +36,7 @@ public class L10nFixPlugin implements Plugin<Project> {
     private static final String SUPPORTED_LOCALES_FIELD_TYPE = "String[]";
 
     private static final Set<String> RES_LOCALES = new HashSet<>();
-    private static final Set<String> SUPPORTED_LOCALES = new HashSet<>();
+    private static final Set<String> BCP47_LOCALES = new HashSet<>();
 
     private int verbosity;
 
@@ -68,11 +68,11 @@ public class L10nFixPlugin implements Plugin<Project> {
             iterProjects(proj, p ->
                     p.getPlugins().withType(AppPlugin.class, plugin ->
                             resolveConfiguredLocales(p, plugin, RES_LOCALES)));
-            SUPPORTED_LOCALES.addAll(Util.toBcp47(RES_LOCALES));
-            SUPPORTED_LOCALES.add(getDefaultLocale(project, extension));
+            BCP47_LOCALES.addAll(Util.toBcp47(RES_LOCALES));
+            BCP47_LOCALES.add(getDefaultLocale(project, extension));
             iterProjects(proj, p ->
                     iterVariants(p, variant ->
-                            setBuildConfigField(p, variant, Collections.unmodifiableSet(SUPPORTED_LOCALES))));
+                            setBuildConfigField(p, variant, Collections.unmodifiableSet(BCP47_LOCALES))));
         });
     }
 
