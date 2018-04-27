@@ -98,6 +98,11 @@ The above features are backed by `BuildConfig.SUPPORTED_LOCALES`, an array of
 supported locales generated from the information collected for the compile-time
 contamination fix.
 
+## Requirements
+
+Gradle must be invoked with Java 8 (your app need not use Java 8 language
+features).
+
 ## Usage
 
 1. Add the plugin to your root project
