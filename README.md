@@ -25,7 +25,7 @@ This mechanism can be broken in two different ways. For more details see
 
 ## Do I need this?
 
-- Does your app run on Android 7 (SDK 24) or later?
+- Does your app run on Android 7 or 7.1.1 (SDK 24 or 25)?
 - Does your app support more than one display language?
 - Do you use the AppCompat library? Any Google Play Services libraries? Anything
   else with its own language resources in languages you don't support?
