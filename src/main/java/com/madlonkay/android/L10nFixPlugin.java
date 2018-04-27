@@ -62,11 +62,15 @@ public class L10nFixPlugin implements Plugin<Project> {
         iterVariants(project, variant ->
                 addGenerateCodeTask(project, variant));
 
-        // The rest must be done after evaluation so that the extension can be initialized
-        project.afterEvaluate(proj ->
-                iterProjects(proj, p ->
-                        iterVariants(p, variant ->
-                                setBuildConfigField(p, extension, variant, RES_LOCALES))));
+        // The rest must be done after evaluation so that the extensions can be initialized
+        project.afterEvaluate(proj -> {
+            iterProjects(proj, p ->
+                    p.getPlugins().withType(AppPlugin.class, plugin ->
+                            resolveConfiguredLocales(p, plugin, RES_LOCALES)));
+            iterProjects(proj, p ->
+                    iterVariants(p, variant ->
+                            setBuildConfigField(p, extension, variant, RES_LOCALES)));
+        });
     }
 
     private void setResConfigs(Project project, BasePlugin<?> plugin, Collection<String> resLocales) {
@@ -123,6 +127,19 @@ public class L10nFixPlugin implements Plugin<Project> {
         GenerateCodeTask task = project.getTasks().create(taskName, GenerateCodeTask.class);
         task.setBuildConfigPackageName(variant.getGenerateBuildConfig().getBuildConfigPackageName());
         variant.registerJavaGeneratingTask(task, task.getOutputDirectory());
+    }
+
+    private void resolveConfiguredLocales(Project project, AppPlugin plugin, Collection<String> outLocales) {
+        // AppPlugin (not BasePlugin) is required because we only want to look at resConfig on
+        // the application itself
+        for (String config : plugin.getExtension().getDefaultConfig().getResourceConfigurations()) {
+            if (Util.isLocaleQualifier(config)) {
+                boolean changed = outLocales.add(config);
+                if (changed) {
+                    logInfo(project, "Detected manual resConfig: {}", config);
+                }
+            }
+        }
     }
 
     private static void iterProjects(Project project, Consumer<Project> consumer) {
