@@ -68,7 +68,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         // The rest must be done after evaluation so that the extensions can be initialized
         project.afterEvaluate(proj -> {
             iterProjects(proj, p ->
-                    p.getPlugins().withType(AppPlugin.class, plugin ->
+                    iterPlugins(p, plugin ->
                             resolveConfiguredLocales(p, plugin, RES_LOCALES)));
             Util.transformInto(RES_LOCALES, Util::toBcp47, BCP47_LOCALES);
             BCP47_LOCALES.add(getDefaultLocale(project, extension));
@@ -130,11 +130,16 @@ public class L10nFixPlugin implements Plugin<Project> {
         variant.registerJavaGeneratingTask(task, task.getOutputDirectory());
     }
 
-    private void resolveConfiguredLocales(Project project, AppPlugin plugin, Collection<String> outLocales) {
-        // AppPlugin (not BasePlugin) is required because we only want to look at resConfig on
-        // the application itself
+    private void resolveConfiguredLocales(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
+        boolean isApp = plugin instanceof AppPlugin;
         for (String config : plugin.getExtension().getDefaultConfig().getResourceConfigurations()) {
             if (Util.isLocaleQualifier(config)) {
+                if (!isApp) {
+                    if (!outLocales.contains(config)) {
+                        logWarn(project, "Manually specified resConfig language '{}' on {} will be ignored!", config, project.getName());
+                    }
+                    continue;
+                }
                 boolean changed = outLocales.add(config);
                 if (changed) {
                     logInfo(project, "Detected manual resConfig: {}", config);
@@ -172,6 +177,9 @@ public class L10nFixPlugin implements Plugin<Project> {
         });
     }
 
+    private void logWarn(Project project, String format, Object... args) {
+        log(project, LogLevel.WARN, format, args);
+    }
     private void logInfo(Project project, String format, Object... args) {
         log(project, LogLevel.INFO, format, args);
     }
