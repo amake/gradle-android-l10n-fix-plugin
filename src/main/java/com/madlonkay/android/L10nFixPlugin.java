@@ -46,13 +46,15 @@ public class L10nFixPlugin implements Plugin<Project> {
 
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
-        // Find all locales indicated by resources in all projects
-        Set<String> resLocales = new HashSet<>();
-        iterProjects(project, proj ->
-                iterPlugins(proj, plugin ->
-                        resolveLocales(proj, plugin, resLocales)));
-        logInfo(project, "Detected resource locales in filesystem: {}", resLocales);
-        RES_LOCALES.addAll(resLocales);
+        {
+            // Find all locales indicated by resources in all projects
+            Set<String> resLocales = new HashSet<>();
+            iterProjects(project, proj ->
+                    iterPlugins(proj, plugin ->
+                            resolveLocales(proj, plugin, resLocales)));
+            logInfo(project, "Detected resource locales in filesystem: {}", resLocales);
+            RES_LOCALES.addAll(resLocales);
+        }
 
         // Apply appropriate resConfigs to all projects
         iterProjects(project, proj ->
