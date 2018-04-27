@@ -48,7 +48,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         Set<String> resLocales = new HashSet<>();
         iterProjects(project, proj ->
                 iterPlugins(proj, plugin ->
-                        resLocales.addAll(resolveLocales(proj, plugin))));
+                        resolveLocales(proj, plugin, resLocales)));
 
         // Apply appropriate resConfigs to all projects
         iterProjects(project, proj ->
@@ -89,8 +89,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
-    private Set<String> resolveLocales(Project project, BasePlugin<?> plugin) {
-        Set<String> result = new HashSet<>();
+    private void resolveLocales(Project project, BasePlugin<?> plugin, Set<String> outLocales) {
         for (AndroidSourceSet sourceSet : plugin.getExtension().getSourceSets()) {
             AndroidSourceDirectorySet res = sourceSet.getRes();
             if (sourceSet.getName().toLowerCase(Locale.ENGLISH).contains("test")) {
@@ -101,11 +100,10 @@ public class L10nFixPlugin implements Plugin<Project> {
                 String locale = Util.resolveLocale(file);
                 logDebug(project, "{} -> {}", file, locale);
                 if (locale != null) {
-                    result.add(locale);
+                    outLocales.add(locale);
                 }
             }
         }
-        return result;
     }
 
     private void addGenerateCodeTask(Project project, BaseVariant variant) {
