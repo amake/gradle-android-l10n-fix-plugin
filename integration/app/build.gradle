@@ -31,5 +31,5 @@ dependencies {
 }
 
 l10n {
-    defaultLocale = 'fr'
+    defaultLocale = 'fr-rFR'
 }

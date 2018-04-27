@@ -91,7 +91,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         } else {
             logDebug(project, "{} default locale: {}", project.getName(), defaultLocale);
         }
-        return defaultLocale;
+        return Util.toBcp47(defaultLocale);
     }
 
     private void setBuildConfigField(Project project, BaseVariant variant, Collection<String> bcp47Locales) {
