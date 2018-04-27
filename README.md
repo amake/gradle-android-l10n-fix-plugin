@@ -27,7 +27,11 @@ This mechanism can be broken in two different ways. For more details see
 
 - Does your app run on Android 7 (SDK 24) or later?
 - Does your app support more than one display language?
-- Do you use the AppCompat library? Any Google Play Services libraries?
+- Do you use the AppCompat library? Any Google Play Services libraries? Anything
+  else with its own language resources in languages you don't support?
+- Do you use
+  [WebView](https://developer.android.com/reference/android/webkit/WebView.html)
+  at all?
 
 If so, your app probably suffers from [language resource
 contamination](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce),
