@@ -50,6 +50,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         iterProjects(project, proj ->
                 iterPlugins(proj, plugin ->
                         resolveLocales(proj, plugin, resLocales)));
+        logInfo(project, "Detected resource locales in filesystem: {}", resLocales);
 
         // Apply appropriate resConfigs to all projects
         iterProjects(project, proj ->
@@ -72,11 +73,18 @@ public class L10nFixPlugin implements Plugin<Project> {
         storedResLocales.addAll(resLocales);
         DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
         defaultConfig.addResourceConfigurations(storedResLocales);
-        logInfo(project, "{} resource configurations: {}", project.getName(), defaultConfig.getResourceConfigurations());
+        logInfo(project, "Adding resource configurations to {}: {}", project.getName(), resLocales);
+        logDebug(project, "...result: {}", defaultConfig.getResourceConfigurations());
     }
 
     private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Collection<String> resLocales) {
-        String defaultLocale = extension.getDefaultLocale() != null ? extension.getDefaultLocale() : DEFAULT_LOCALE;
+        String defaultLocale = extension.getDefaultLocale();
+        if (defaultLocale == null) {
+            logDebug(project, "{} default locale not specified; using default ({})", project.getName(), DEFAULT_LOCALE);
+            defaultLocale = DEFAULT_LOCALE;
+        } else {
+            logDebug(project, "{} default locale: {}", project.getName(), defaultLocale);
+        }
 
         Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
         storedSupportedLocales.addAll(Util.toBcp47(resLocales));
