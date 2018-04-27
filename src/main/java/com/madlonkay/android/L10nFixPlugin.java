@@ -19,6 +19,7 @@ import org.gradle.api.logging.LogLevel;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -66,7 +67,7 @@ public class L10nFixPlugin implements Plugin<Project> {
                                 setBuildConfigField(p, extension, variant, resLocales))));
     }
 
-    private void setResConfigs(Project project, BasePlugin<?> plugin, Set<String> resLocales) {
+    private void setResConfigs(Project project, BasePlugin<?> plugin, Collection<String> resLocales) {
         Set<String> storedResLocales = RES_LOCALES;
         storedResLocales.addAll(resLocales);
         DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
@@ -74,7 +75,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         logInfo(project, "{} resource configurations: {}", project.getName(), defaultConfig.getResourceConfigurations());
     }
 
-    private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Set<String> resLocales) {
+    private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Collection<String> resLocales) {
         String defaultLocale = extension.getDefaultLocale() != null ? extension.getDefaultLocale() : DEFAULT_LOCALE;
 
         Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
@@ -89,7 +90,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
-    private void resolveLocales(Project project, BasePlugin<?> plugin, Set<String> outLocales) {
+    private void resolveLocales(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
         for (AndroidSourceSet sourceSet : plugin.getExtension().getSourceSets()) {
             AndroidSourceDirectorySet res = sourceSet.getRes();
             if (sourceSet.getName().toLowerCase(Locale.ENGLISH).contains("test")) {
