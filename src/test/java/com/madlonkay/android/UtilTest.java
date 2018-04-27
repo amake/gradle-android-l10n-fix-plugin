@@ -11,6 +11,17 @@ import static org.junit.Assert.*;
 public class UtilTest {
 
     @Test
+    public void isLocaleQualifier() {
+        assertTrue(Util.isLocaleQualifier("en"));
+        assertTrue(Util.isLocaleQualifier("es-rMX"));
+        assertTrue(Util.isLocaleQualifier("b+sr+Latn"));
+        assertFalse(Util.isLocaleQualifier(""));
+        assertFalse(Util.isLocaleQualifier("foo"));
+        assertFalse(Util.isLocaleQualifier("v21"));
+        assertFalse(Util.isLocaleQualifier("hdpi"));
+    }
+
+    @Test
     public void resolveLocale() {
         assertNull(Util.resolveLocale(new File("/Users/me/project/")));
         assertNull(Util.resolveLocale(new File("/Users/me/project/res/values/strings.xml")));

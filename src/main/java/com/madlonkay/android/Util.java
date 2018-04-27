@@ -10,10 +10,16 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Util {
 
     private static final String LOCALE_PREFIX = "values-";
+    private static final Pattern LOCALE_RESOURCE_PATTERN = Pattern.compile("[a-z]{2}(?:-r[A-Z]{2})?|b(?:\\+[a-zA-Z]+)+");
+
+    public static boolean isLocaleQualifier(String s) {
+        return LOCALE_RESOURCE_PATTERN.matcher(s).matches();
+    }
 
     public static String resolveLocale(File file) {
         String result = resolveLocale(file.getName());
