@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +57,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         // Apply appropriate resConfigs to all projects
         iterProjects(project, proj ->
                 iterPlugins(proj, plugin ->
-                        setResConfigs(proj, plugin, RES_LOCALES)));
+                        setResConfigs(proj, plugin, Collections.unmodifiableSet(RES_LOCALES))));
 
         // Add code-generation tasks to all variants
         iterVariants(project, variant ->
@@ -67,9 +68,11 @@ public class L10nFixPlugin implements Plugin<Project> {
             iterProjects(proj, p ->
                     p.getPlugins().withType(AppPlugin.class, plugin ->
                             resolveConfiguredLocales(p, plugin, RES_LOCALES)));
+            SUPPORTED_LOCALES.addAll(Util.toBcp47(RES_LOCALES));
+            SUPPORTED_LOCALES.add(getDefaultLocale(project, extension));
             iterProjects(proj, p ->
                     iterVariants(p, variant ->
-                            setBuildConfigField(p, extension, variant, RES_LOCALES)));
+                            setBuildConfigField(p, variant, Collections.unmodifiableSet(SUPPORTED_LOCALES))));
         });
     }
 
@@ -80,7 +83,7 @@ public class L10nFixPlugin implements Plugin<Project> {
         logDebug(project, "...result: {}", defaultConfig.getResourceConfigurations());
     }
 
-    private void setBuildConfigField(Project project, L10nFixExtension extension, BaseVariant variant, Collection<String> resLocales) {
+    private String getDefaultLocale(Project project, L10nFixExtension extension) {
         String defaultLocale = extension.getDefaultLocale();
         if (defaultLocale == null) {
             logDebug(project, "{} default locale not specified; using default ({})", project.getName(), DEFAULT_LOCALE);
@@ -88,14 +91,10 @@ public class L10nFixPlugin implements Plugin<Project> {
         } else {
             logDebug(project, "{} default locale: {}", project.getName(), defaultLocale);
         }
-
-        SUPPORTED_LOCALES.addAll(Util.toBcp47(resLocales));
-        SUPPORTED_LOCALES.add(defaultLocale);
-
-        setBuildConfigFieldImpl(project, variant, SUPPORTED_LOCALES);
+        return defaultLocale;
     }
 
-    private void setBuildConfigFieldImpl(Project project, BaseVariant variant, Collection<String> bcp47Locales) {
+    private void setBuildConfigField(Project project, BaseVariant variant, Collection<String> bcp47Locales) {
         List<String> localeList = new ArrayList<>(bcp47Locales);
         localeList.sort(Comparator.naturalOrder());
         String fieldValue = Util.toArrayLiteral(localeList);
