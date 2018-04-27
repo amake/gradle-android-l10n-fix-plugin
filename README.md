@@ -44,19 +44,19 @@ $ $ANDROID_HOME/build-tools/27.0.3/aapt d --values resources app/build/outputs/a
 
 ### Compile-time contamination fix
 
-The compile-time fix is essentially a reimplementation of [`resConfig
-'auto'`](https://google.github.io/android-gradle-dsl/3.1/com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:resConfig%28java.lang.String%29),
-which was [deprecated in Android Gradle Plugin
+The compile-time fix works by inspecting your `res` folder hierarchy to detect
+what locales your app supports, and filters out unwanted locales by setting the
+appropriate
+[`resConfig`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:resConfig%28java.lang.String%29)
+filters.
+
+This is essentially a reimplementation of `resConfig 'auto'`, which was
+[deprecated in Android Gradle Plugin
 3.1](https://android.googlesource.com/platform/tools/base/+/6b7799c36f1ba5194f73f5c14a7b0365a8428714%5E%21/)
-due to "issues with multi-module projects"*.
-
-The plugin works by inspecting your `res` folder hierarchy to detect what
-locales your app supports, and filters out unwanted locales by setting the
-appropriate `resConfig` filters.
-
-\*It's not clear exactly what the issues with `resConfig 'auto'` were, but this
-plugin has been tested with multi-module projects and works correctly in that it
-picks up all locales across all modules.
+due to issues with multi-module projects and `aar` libraries. This plugin
+addresses some of the issues, but not all. If your project uses internal
+libraries in `aar` form, see [Limitations](#Limitations) for important
+information.
 
 ### Runtime contamination fix
 
@@ -73,7 +73,9 @@ class:
   - `fixLocales(Resources)`: Call this on your activity's resources immediately
     after referencing `WebView` to restore the correct locales.
 
-The above features are backed by `BuildConfig.SUPPORTED_LOCALES`, an array of supported locales generated from the information collected for the compile-time contamination fix.
+The above features are backed by `BuildConfig.SUPPORTED_LOCALES`, an array of
+supported locales generated from the information collected for the compile-time
+contamination fix.
 
 ## Usage
 
@@ -109,6 +111,34 @@ Options:
 
 - `defaultLocale`: The locale for "default" resources (i.e. in `values`, not
   `values-XX`). This defaults to `en`.
+
+## Limitations
+
+An Android Studio Team member described the [reason for removing `resConfig
+'auto'`](https://www.reddit.com/r/androiddev/comments/8eb8vm/android_gradle_plugin_31x_commit_history/dy09tv1/)
+as such:
+
+> `auto` only looked at the app module to figure out what to package instead of
+> all your sub-modules. So if you have a very empty app module (say no UI
+> strings in there), and all your UI in sub-modules, then the packaging would be
+> wrong.
+>
+> Even if we made this work, it's impossible to know whether remote dependencies
+> (consumed via `aar`) were part of your own code or were 3rd party
+> libraries. (some companies publish their own shared code as `aar` via internal
+> repos)
+>
+> So the issue is what should we consider to be yours vs not yours and how to
+> make this work 100% reliably.
+>
+> Ultimately the most reliable way to make this work is for the dev to
+> explicitly list what resource to include.
+
+This plugin does correctly handle multiple modules, but it cannot address the
+`aar` issue. It considers `aar`s to be "not yours", so if you have internally
+developed `aar`s that contain language resources not otherwise detectable, you
+should manually list those in `resConfigs` as officially recommended *in your
+main app's `defaultConfig`*.
 
 ## License
 
