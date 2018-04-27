@@ -17,7 +17,7 @@ function resgrep() {
         grep -F "$1"
 }
 
-resgrep "type 10 configCount=6" ||
+resgrep "type 10 configCount=7" ||
     (resgrep "config" && die "APK had wrong number of language resources")
 
 echo "Tests complete"
