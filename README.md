@@ -76,7 +76,7 @@ This is essentially a reimplementation of `resConfig 'auto'`, which was
 3.1](https://android.googlesource.com/platform/tools/base/+/6b7799c36f1ba5194f73f5c14a7b0365a8428714%5E%21/)
 due to issues with multi-module projects and `aar` libraries. This plugin
 addresses some of the issues, but not all. If your project uses internal
-libraries in `aar` form, see [Limitations](#Limitations) for important
+libraries in `aar` form, see [Limitations](#limitations) for important
 information.
 
 ### Runtime contamination fix
