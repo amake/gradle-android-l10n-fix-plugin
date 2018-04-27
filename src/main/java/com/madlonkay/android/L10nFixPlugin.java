@@ -51,11 +51,12 @@ public class L10nFixPlugin implements Plugin<Project> {
                 iterPlugins(proj, plugin ->
                         resolveLocales(proj, plugin, resLocales)));
         logInfo(project, "Detected resource locales in filesystem: {}", resLocales);
+        RES_LOCALES.addAll(resLocales);
 
         // Apply appropriate resConfigs to all projects
         iterProjects(project, proj ->
                 iterPlugins(proj, plugin ->
-                        setResConfigs(proj, plugin, resLocales)));
+                        setResConfigs(proj, plugin, RES_LOCALES)));
 
         // Add code-generation tasks to all variants
         iterVariants(project, variant ->
@@ -65,14 +66,12 @@ public class L10nFixPlugin implements Plugin<Project> {
         project.afterEvaluate(proj ->
                 iterProjects(proj, p ->
                         iterVariants(p, variant ->
-                                setBuildConfigField(p, extension, variant, resLocales))));
+                                setBuildConfigField(p, extension, variant, RES_LOCALES))));
     }
 
     private void setResConfigs(Project project, BasePlugin<?> plugin, Collection<String> resLocales) {
-        Set<String> storedResLocales = RES_LOCALES;
-        storedResLocales.addAll(resLocales);
         DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
-        defaultConfig.addResourceConfigurations(storedResLocales);
+        defaultConfig.addResourceConfigurations(resLocales);
         logInfo(project, "Adding resource configurations to {}: {}", project.getName(), resLocales);
         logDebug(project, "...result: {}", defaultConfig.getResourceConfigurations());
     }
@@ -86,13 +85,16 @@ public class L10nFixPlugin implements Plugin<Project> {
             logDebug(project, "{} default locale: {}", project.getName(), defaultLocale);
         }
 
-        Set<String> storedSupportedLocales = SUPPORTED_LOCALES;
-        storedSupportedLocales.addAll(Util.toBcp47(resLocales));
-        storedSupportedLocales.add(defaultLocale);
+        SUPPORTED_LOCALES.addAll(Util.toBcp47(resLocales));
+        SUPPORTED_LOCALES.add(defaultLocale);
 
-        List<String> bcp47Locales = new ArrayList<>(storedSupportedLocales);
-        bcp47Locales.sort(Comparator.naturalOrder());
-        String fieldValue = Util.toArrayLiteral(bcp47Locales);
+        setBuildConfigFieldImpl(project, variant, SUPPORTED_LOCALES);
+    }
+
+    private void setBuildConfigFieldImpl(Project project, BaseVariant variant, Collection<String> bcp47Locales) {
+        List<String> localeList = new ArrayList<>(bcp47Locales);
+        localeList.sort(Comparator.naturalOrder());
+        String fieldValue = Util.toArrayLiteral(localeList);
 
         logInfo(project, "{} ({}): {} = {}", project.getName(), variant.getName(), SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
