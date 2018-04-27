@@ -6,6 +6,23 @@ problems](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce) that
 break display-language fallback according to user preferences on Android 7 and
 later.
 
+## What?
+
+Starting in Android 7, instead of choosing a single language for the user
+interface, you can set a priority list of languages. Let's say you chose:
+
+1. Spanish
+2. Italian
+3. English
+
+Now consider an app that supports both Italian and English. With your preferred
+languages set to the above, the OS knows to show it to you in Italian rather
+than English. This is display-language fallback.
+
+This mechanism can be broken in two different ways. For more details see
+[Correct localization on Android
+7](https://gist.github.com/amake/0ac7724681ac1c178c6f95a5b09f03ce).
+
 ## Do I need this?
 
 - Does your app run on Android 7 (SDK 24) or later?
