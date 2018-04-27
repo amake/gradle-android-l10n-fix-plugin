@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class Util {
@@ -37,12 +38,10 @@ public class Util {
         }
     }
 
-    public static Set<String> toBcp47(Collection<String> resLocales) {
-        Set<String> result = new HashSet<>(resLocales.size());
-        for (String resLocale : resLocales) {
-            result.add(toBcp47(resLocale));
+    public static <T> void transformInto(Collection<T> source, Function<T, T> transform, Collection<T> target) {
+        for (T item : source) {
+            target.add(transform.apply(item));
         }
-        return result;
     }
 
     public static String toBcp47(String resLocale) {
