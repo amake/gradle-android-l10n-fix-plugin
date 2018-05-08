@@ -68,6 +68,9 @@ public class GenerateCodeTask extends DefaultTask {
                 .addMember("value", "$S", "deprecation")
                 .build();
 
+        ClassName log = ClassName.get("android.util", "Log");
+        String tag = "L10nFix";
+
         MethodSpec isSupportedLocale = MethodSpec.methodBuilder("isSupportedLocale")
                 .addJavadoc("Whether or not the specified {@code $T} is supported by this app.", Locale.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -111,6 +114,8 @@ public class GenerateCodeTask extends DefaultTask {
                 .addStatement("$T currentLocales = config.getLocales()", localeList)
                 .beginControlFlow("if (!$N(currentLocales.get(0)))", isSupportedLocale)
                     .addStatement("$T supportedLocales = $N(currentLocales)", localeList, filterUnsupportedLocales)
+                    .addStatement("$T.d($S, $S + currentLocales.toLanguageTags() + $S + supportedLocales.toLanguageTags())",
+                            log, tag, "Fixing language tags; before=", "; after=")
                     .beginControlFlow("if (!supportedLocales.isEmpty())")
                         .addStatement("config.setLocales(supportedLocales)")
                         .addComment("updateConfiguration() is deprecated in SDK 25, but the alternative")
@@ -140,6 +145,8 @@ public class GenerateCodeTask extends DefaultTask {
                     .addStatement("$T currentLocales = base.getResources().getConfiguration().getLocales()", localeList)
                     .beginControlFlow("if (!$N.$N(currentLocales.get(0)))", l10nUtil, isSupportedLocale)
                         .addStatement("$T supportedLocales = $N.$N(currentLocales)", localeList, l10nUtil, filterUnsupportedLocales)
+                        .addStatement("$T.d($S, $S + currentLocales.toLanguageTags() + $S + supportedLocales.toLanguageTags())",
+                                log, tag, "Fixing language tags: before=", "; after=")
                         .beginControlFlow("if (!supportedLocales.isEmpty())")
                             .addStatement("$T config = new $T()", configuration, configuration)
                             .addStatement("config.setLocales(supportedLocales)")
