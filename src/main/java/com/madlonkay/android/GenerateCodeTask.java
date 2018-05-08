@@ -8,6 +8,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -48,7 +50,7 @@ public class GenerateCodeTask extends DefaultTask {
         getProject().delete(getOutputDirectory());
 
         ClassName buildConfig = ClassName.get(buildConfigPackageName, "BuildConfig");
-        ClassName activity = ClassName.get("android.support.v7.app", "AppCompatActivity");
+        ClassName activity = getActivityClass();
         ClassName context = ClassName.get("android.content", "Context");
         ClassName configuration = ClassName.get("android.content.res", "Configuration");
         ClassName resources = ClassName.get("android.content.res", "Resources");
@@ -166,5 +168,16 @@ public class GenerateCodeTask extends DefaultTask {
         JavaFile.builder(buildConfigPackageName, l10nActivity)
                 .build()
                 .writeTo(getOutputDirectory());
+    }
+
+    private ClassName getActivityClass() {
+        for (Configuration configuration : getProject().getConfigurations()) {
+            for (Dependency dependency : configuration.getAllDependencies()) {
+                if ("com.android.support".equals(dependency.getGroup()) && "appcompat-v7".equals(dependency.getName())) {
+                    return ClassName.get("android.support.v7.app", "AppCompatActivity");
+                }
+            }
+        }
+        return ClassName.get("android.app", "Activity");
     }
 }
