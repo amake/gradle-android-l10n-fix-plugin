@@ -18,6 +18,9 @@ function resgrep() {
         grep -F "$1"
 }
 
+! resgrep "config pt" ||
+    (resgrep "config" && die "APK included test-only resources")
+
 resgrep "type 10 configCount=7" ||
     (resgrep "config" && die "APK had wrong number of language resources")
 
