@@ -8,8 +8,9 @@ import static org.junit.Assert.assertArrayEquals;
 public class BuildConfigTest {
     @Test
     public void supportedLocales() {
-        String[] expected = { "de", "en", "es-MX", "fr-FR", "ja", "ko", "sr-Latn" };
+        String[] expected = { "cs", "de", "en", "es-MX", "fr-FR", "ja", "ko", "sr-Latn" };
         assertArrayEquals(expected, BuildConfig.SUPPORTED_LOCALES);
         assertArrayEquals(expected, org.madlonkay.testlibrary.BuildConfig.SUPPORTED_LOCALES);
+        assertArrayEquals(expected, org.madlonkay.testlibrary2.BuildConfig.SUPPORTED_LOCALES);
     }
 }
