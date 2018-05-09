@@ -16,6 +16,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".BadActivity" />
+        <activity-alias
+            android:name="org.madlonkay.testapp.BadActivity"
+            android:targetActivity=".BadActivity"
+            android:label="@string/app_name_buggy">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 
 </manifest>
