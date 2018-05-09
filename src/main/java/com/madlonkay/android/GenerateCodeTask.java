@@ -2,6 +2,8 @@ package com.madlonkay.android;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -17,6 +19,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -60,6 +63,8 @@ public class GenerateCodeTask extends DefaultTask {
         ParameterizedTypeName listOfLocale = ParameterizedTypeName.get(List.class, Locale.class);
         ParameterizedTypeName arrayListOfLocale = ParameterizedTypeName.get(ArrayList.class, Locale.class);
 
+        ClassName ulocale = ClassName.get("android.icu.util", "ULocale");
+
         AnnotationSpec requiresApiN = AnnotationSpec.builder(requiresApi)
                 .addMember("api", "$T.VERSION_CODES.N", build)
                 .build();
@@ -70,19 +75,50 @@ public class GenerateCodeTask extends DefaultTask {
         ClassName log = ClassName.get("android.util", "Log");
         String tag = "L10nFix";
 
+        FieldSpec supportedLocales = FieldSpec.builder(listOfLocale, "SUPPORTED_LOCALES",
+                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .build();
+
+        CodeBlock supportedLocalesInit = CodeBlock.builder()
+                .addStatement("$T list = $T.emptyList()", listOfLocale, Collections.class)
+                .beginControlFlow("if ($T.VERSION.SDK_INT >= $T.VERSION_CODES.LOLLIPOP)", build, build)
+                    .addStatement("list = new $T($T.SUPPORTED_LOCALES.length)", arrayListOfLocale, buildConfig)
+                    .beginControlFlow("for (int i = 0; i < $T.SUPPORTED_LOCALES.length; i++)", buildConfig)
+                        .addStatement("list.add($T.forLanguageTag($T.SUPPORTED_LOCALES[i]))", Locale.class, buildConfig)
+                    .endControlFlow()
+                    .addStatement("list = $T.unmodifiableList(list)", Collections.class)
+                .endControlFlow()
+                .addStatement("$N = list", supportedLocales)
+                .build();
+
+        MethodSpec isSupportedLocaleImpl = MethodSpec.methodBuilder("isSupportedLocale")
+                .addModifiers(Modifier.STATIC)
+                .returns(boolean.class)
+                .addAnnotation(requiresApiN)
+                .addParameter(Locale.class, "locale")
+                .addParameter(listOfLocale, "supportedLocales")
+                .beginControlFlow("for (int i = 0; i < supportedLocales.size(); i++)")
+                    .addStatement("$T loc = supportedLocales.get(i)", Locale.class)
+                    .beginControlFlow("if (loc.equals(locale))")
+                        .addStatement("return true")
+                    .nextControlFlow("else if (loc.getLanguage().equals(locale.getLanguage()))")
+                        .addStatement("$T uloc = $T.addLikelySubtags($T.forLocale(loc))", ulocale, ulocale, ulocale)
+                        .addStatement("$T ulocale = $T.addLikelySubtags($T.forLocale(locale))", ulocale, ulocale, ulocale)
+                        .beginControlFlow("if (uloc.getScript().equals(ulocale.getScript()))")
+                            .addStatement("return true")
+                        .endControlFlow()
+                    .endControlFlow()
+                .endControlFlow()
+                .addStatement("return false")
+                .build();
+
         MethodSpec isSupportedLocale = MethodSpec.methodBuilder("isSupportedLocale")
                 .addJavadoc("Whether or not the specified {@code $T} is supported by this app.", Locale.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(boolean.class)
                 .addAnnotation(requiresApiN)
                 .addParameter(Locale.class, "locale")
-                .beginControlFlow("for (int i = 0; i < $T.SUPPORTED_LOCALES.length; i++)", buildConfig)
-                    .addStatement("$T loc = $T.SUPPORTED_LOCALES[i]", String.class, buildConfig)
-                    .beginControlFlow("if (loc.equals(locale.getLanguage()) || loc.equals(locale.toLanguageTag()))")
-                        .addStatement("return true")
-                    .endControlFlow()
-                .endControlFlow()
-                .addStatement("return false")
+                .addStatement("return $N(locale, $N)", isSupportedLocaleImpl, supportedLocales)
                 .build();
 
         MethodSpec filterUnsupportedLocales = MethodSpec.methodBuilder("filterUnsupportedLocales")
@@ -126,6 +162,9 @@ public class GenerateCodeTask extends DefaultTask {
 
         TypeSpec l10nUtil = TypeSpec.classBuilder("L10nUtil")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addField(supportedLocales)
+                .addStaticBlock(supportedLocalesInit)
+                .addMethod(isSupportedLocaleImpl)
                 .addMethod(isSupportedLocale)
                 .addMethod(filterUnsupportedLocales)
                 .addMethod(fixLocales)
