@@ -63,9 +63,6 @@ public class GenerateCodeTask extends DefaultTask {
         AnnotationSpec requiresApiN = AnnotationSpec.builder(requiresApi)
                 .addMember("api", "$T.VERSION_CODES.N", build)
                 .build();
-        AnnotationSpec requiresApiLollipop = AnnotationSpec.builder(requiresApi)
-                .addMember("api", "$T.VERSION_CODES.LOLLIPOP", build)
-                .build();
         AnnotationSpec suppressDeprecation = AnnotationSpec.builder(SuppressWarnings.class)
                 .addMember("value", "$S", "deprecation")
                 .build();
@@ -92,7 +89,7 @@ public class GenerateCodeTask extends DefaultTask {
                 .addJavadoc("Remove locales not supported by this app from the provided {@code LocaleList}.")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(localeList)
-                .addAnnotation(requiresApiLollipop)
+                .addAnnotation(requiresApiN)
                 .addParameter(localeList, "locales")
                 .addStatement("$T filtered = new $T(locales.size())", listOfLocale, arrayListOfLocale)
                 .beginControlFlow("for (int i = 0; i < locales.size(); i++)")
