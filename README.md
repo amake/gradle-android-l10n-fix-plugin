@@ -88,7 +88,7 @@ class:
 
 - `L10nFixActivity`: An `Activity` class that ensures that only supported
   locales are held by its base context. This is needed to keep locales correct
-  after configuration changes such as device rotation.
+  post-contamination through configuration changes such as device rotation.
 - `L10nUtil`: A utility class offering static methods for dealing with supported
   locales, most importantly:
   - `fixLocales(Resources)`: Call this on your activity's resources immediately
