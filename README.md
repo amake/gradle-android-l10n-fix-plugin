@@ -98,6 +98,10 @@ The above features are backed by `BuildConfig.SUPPORTED_LOCALES`, an array of
 supported locales generated from the information collected for the compile-time
 contamination fix.
 
+*Note that runtime contamination appears to be fixed in Android 8+; the above
+features essentially turn into no-ops when they aren't necessary, so it is safe
+to use them on Android 8+.
+
 ## Requirements
 
 Gradle must be invoked with Java 8 (your app need not use Java 8 language
