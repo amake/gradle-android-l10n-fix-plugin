@@ -1,2 +1,2 @@
-include ':app', ':lib', ':lib2'
+include ':app', ':lib', ':lib2', ':app2'
 includeBuild '..'
