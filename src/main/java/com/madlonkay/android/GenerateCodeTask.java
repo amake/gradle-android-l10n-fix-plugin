@@ -10,6 +10,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.Input;
@@ -52,8 +53,11 @@ public class GenerateCodeTask extends DefaultTask {
         // Delete output dir in case package name changed, to prevent extraneous files
         getProject().delete(getOutputDirectory());
 
+        boolean useSupportLib = dependsOnSupportLibrary(getProject());
+
         ClassName buildConfig = ClassName.get(buildConfigPackageName, "BuildConfig");
-        ClassName activity = getActivityClass();
+        ClassName activity = useSupportLib ? ClassName.get("android.support.v7.app", "AppCompatActivity")
+                : ClassName.get("android.app", "Activity");
         ClassName context = ClassName.get("android.content", "Context");
         ClassName configuration = ClassName.get("android.content.res", "Configuration");
         ClassName resources = ClassName.get("android.content.res", "Resources");
@@ -91,10 +95,9 @@ public class GenerateCodeTask extends DefaultTask {
                 .addStatement("$N = list", supportedLocales)
                 .build();
 
-        MethodSpec isSupportedLocaleImpl = MethodSpec.methodBuilder("isSupportedLocale")
+        MethodSpec.Builder isSupportedLocaleImplBuilder = MethodSpec.methodBuilder("isSupportedLocale")
                 .addModifiers(Modifier.STATIC)
                 .returns(boolean.class)
-                .addAnnotation(requiresApiN)
                 .addParameter(Locale.class, "locale")
                 .addParameter(listOfLocale, "supportedLocales")
                 .beginControlFlow("for (int i = 0; i < supportedLocales.size(); i++)")
@@ -109,23 +112,27 @@ public class GenerateCodeTask extends DefaultTask {
                         .endControlFlow()
                     .endControlFlow()
                 .endControlFlow()
-                .addStatement("return false")
-                .build();
+                .addStatement("return false");
+        if (useSupportLib) {
+            isSupportedLocaleImplBuilder.addAnnotation(requiresApiN);
+        }
+        MethodSpec isSupportedLocaleImpl = isSupportedLocaleImplBuilder.build();
 
-        MethodSpec isSupportedLocale = MethodSpec.methodBuilder("isSupportedLocale")
+        MethodSpec.Builder isSupportedLocaleBuilder = MethodSpec.methodBuilder("isSupportedLocale")
                 .addJavadoc("Whether or not the specified {@code $T} is supported by this app.", Locale.class)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(boolean.class)
-                .addAnnotation(requiresApiN)
                 .addParameter(Locale.class, "locale")
-                .addStatement("return $N(locale, $N)", isSupportedLocaleImpl, supportedLocales)
-                .build();
+                .addStatement("return $N(locale, $N)", isSupportedLocaleImpl, supportedLocales);
+        if (useSupportLib) {
+            isSupportedLocaleBuilder.addAnnotation(requiresApiN);
+        }
+        MethodSpec isSupportedLocale = isSupportedLocaleBuilder.build();
 
-        MethodSpec filterUnsupportedLocales = MethodSpec.methodBuilder("filterUnsupportedLocales")
+        MethodSpec.Builder filterUnsupportedLocalesBuilder = MethodSpec.methodBuilder("filterUnsupportedLocales")
                 .addJavadoc("Remove locales not supported by this app from the provided {@code LocaleList}.")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(localeList)
-                .addAnnotation(requiresApiN)
                 .addParameter(localeList, "locales")
                 .addStatement("$T filtered = new $T(locales.size())", listOfLocale, arrayListOfLocale)
                 .beginControlFlow("for (int i = 0; i < locales.size(); i++)")
@@ -134,15 +141,17 @@ public class GenerateCodeTask extends DefaultTask {
                         .addStatement("filtered.add(loc)")
                     .endControlFlow()
                 .endControlFlow()
-                .addStatement("return new $T(filtered.toArray(new Locale[filtered.size()]))", localeList)
-                .build();
+                .addStatement("return new $T(filtered.toArray(new Locale[filtered.size()]))", localeList);
+        if (useSupportLib) {
+            filterUnsupportedLocalesBuilder.addAnnotation(requiresApiN);
+        }
+        MethodSpec filterUnsupportedLocales = filterUnsupportedLocalesBuilder.build();
 
-        MethodSpec fixLocales = MethodSpec.methodBuilder("fixLocales")
+        MethodSpec.Builder fixLocalesBuilder = MethodSpec.methodBuilder("fixLocales")
                 .addJavadoc("Fix the specified {@code $T} to ensure that it only has locales supported by this app.", resources)
                 .addJavadoc("Call this after runtime contamination, e.g. after loading {@code WebView}. ")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class)
-                .addAnnotation(requiresApiN)
                 .addAnnotation(suppressDeprecation)
                 .addParameter(resources, "resources")
                 .addStatement("$T config = resources.getConfiguration()", configuration)
@@ -157,8 +166,11 @@ public class GenerateCodeTask extends DefaultTask {
                         .addComment("requires restarting the activity, which we don't want to do here.")
                         .addStatement("resources.updateConfiguration(config, resources.getDisplayMetrics())")
                     .endControlFlow()
-                .endControlFlow()
-                .build();
+                .endControlFlow();
+        if (useSupportLib) {
+            fixLocalesBuilder.addAnnotation(requiresApiN);
+        }
+        MethodSpec fixLocales = fixLocalesBuilder.build();
 
         TypeSpec l10nUtil = TypeSpec.classBuilder("L10nUtil")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -206,14 +218,14 @@ public class GenerateCodeTask extends DefaultTask {
                 .writeTo(getOutputDirectory());
     }
 
-    private ClassName getActivityClass() {
-        for (Configuration configuration : getProject().getConfigurations()) {
+    private static boolean dependsOnSupportLibrary(Project project) {
+        for (Configuration configuration : project.getConfigurations()) {
             for (Dependency dependency : configuration.getAllDependencies()) {
                 if ("com.android.support".equals(dependency.getGroup()) && "appcompat-v7".equals(dependency.getName())) {
-                    return ClassName.get("android.support.v7.app", "AppCompatActivity");
+                    return true;
                 }
             }
         }
-        return ClassName.get("android.app", "Activity");
+        return false;
     }
 }
