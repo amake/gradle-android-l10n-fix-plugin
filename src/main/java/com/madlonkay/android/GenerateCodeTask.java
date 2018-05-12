@@ -95,6 +95,10 @@ public class GenerateCodeTask extends DefaultTask {
                 .addStatement("$N = list", supportedLocales)
                 .build();
 
+        MethodSpec l10nUtilConstructor = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PRIVATE)
+                .build();
+
         MethodSpec.Builder isSupportedLocaleImplBuilder = MethodSpec.methodBuilder("isSupportedLocale")
                 .addModifiers(Modifier.STATIC)
                 .returns(boolean.class)
@@ -176,6 +180,7 @@ public class GenerateCodeTask extends DefaultTask {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addField(supportedLocales)
                 .addStaticBlock(supportedLocalesInit)
+                .addMethod(l10nUtilConstructor)
                 .addMethod(isSupportedLocaleImpl)
                 .addMethod(isSupportedLocale)
                 .addMethod(filterUnsupportedLocales)
