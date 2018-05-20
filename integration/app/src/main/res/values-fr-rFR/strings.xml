@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">TestApp</string>
+    <string name="app_name_buggy">TestApp🐞</string>
+    <string name="message">Bonjour le monde !</string>
+</resources>
