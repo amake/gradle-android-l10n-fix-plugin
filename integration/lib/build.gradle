@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.madlonkay.android-l10n-fix'
 
 android {
     compileSdkVersion 27
@@ -35,3 +34,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }
+
+apply plugin: 'com.madlonkay.android-l10n-fix'
