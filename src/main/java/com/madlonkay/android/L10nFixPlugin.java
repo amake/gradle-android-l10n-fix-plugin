@@ -75,7 +75,7 @@ public class L10nFixPlugin implements Plugin<Project> {
                     iterPlugins(p, plugin ->
                             resolveConfiguredLocales(p, plugin, RES_LOCALES)));
             Util.transformInto(RES_LOCALES, Util::toBcp47, BCP47_LOCALES);
-            BCP47_LOCALES.add(getDefaultLocale(project, extension));
+            BCP47_LOCALES.add(getDefaultLocale(proj, extension));
             iterProjects(proj, p ->
                     iterVariants(p, variant ->
                             setBuildConfigField(p, variant, Collections.unmodifiableSet(BCP47_LOCALES))));
