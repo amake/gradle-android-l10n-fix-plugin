@@ -14,6 +14,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.logging.LogLevel;
 
 import java.io.File;
@@ -46,20 +47,15 @@ public class L10nFixPlugin implements Plugin<Project> {
 
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
-        {
+        if (RES_LOCALES.isEmpty()) {
             // Find all locales indicated by resources in all projects
-            Set<String> resLocales = new HashSet<>();
-            iterProjects(project, proj ->
-                    iterPlugins(proj, plugin ->
-                            resolveLocales(proj, plugin, resLocales)));
-            logInfo(project, "Detected resource locales in filesystem: {}", resLocales);
-            RES_LOCALES.addAll(resLocales);
+            iterProjects(project, proj -> resolveLocalesFileSystem(proj, RES_LOCALES));
+            logInfo(project, "Detected resource locales in filesystem: {}", RES_LOCALES);
         }
 
-        // Apply appropriate resConfigs to all projects
-        iterProjects(project, proj ->
-                iterPlugins(proj, plugin ->
-                        setResConfigs(proj, plugin, Collections.unmodifiableSet(RES_LOCALES))));
+        // Apply appropriate resConfigs to project
+        iterPlugins(project, plugin ->
+                setResConfigs(project, plugin, Collections.unmodifiableSet(RES_LOCALES)));
 
         // Add code-generation tasks to all variants
         iterVariants(project, variant ->
@@ -105,7 +101,21 @@ public class L10nFixPlugin implements Plugin<Project> {
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
-    private void resolveLocales(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
+    private void resolveLocalesFileSystem(Project project, Collection<String> outLocales) {
+        ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
+        tree.include("**/res/**");
+        tree.exclude("**/build/**", "**/test/**", "**/androidTest/**");
+        logDebug(project, "Inspecting file tree: {}", tree);
+        for (File file : tree.getFiles()) {
+            String locale = Util.resolveLocale(file);
+            logDebug(project, "{} -> {}", file, locale);
+            if (locale != null) {
+                outLocales.add(locale);
+            }
+        }
+    }
+
+    private void resolveLocalesActual(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
         for (AndroidSourceSet sourceSet : plugin.getExtension().getSourceSets()) {
             AndroidSourceDirectorySet res = sourceSet.getRes();
             if (sourceSet.getName().toLowerCase(Locale.ENGLISH).contains("test")) {

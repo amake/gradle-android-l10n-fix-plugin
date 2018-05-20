@@ -21,11 +21,8 @@ public class Util {
     }
 
     public static String resolveLocale(File file) {
-        String result = resolveLocale(file.getName());
-        if (result == null) {
-            result = resolveLocale(file.getParentFile().getName());
-        }
-        return result;
+        File toResolve = file.isDirectory() ? file : file.getParentFile();
+        return resolveLocale(toResolve.getName());
     }
 
     private static String resolveLocale(String path) {
