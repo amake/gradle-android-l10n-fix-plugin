@@ -154,20 +154,9 @@ public class L10nFixPlugin implements Plugin<Project> {
     }
 
     private void resolveConfiguredLocales(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
-        boolean isApp = plugin instanceof AppPlugin;
         for (String config : plugin.getExtension().getDefaultConfig().getResourceConfigurations()) {
             if (Util.isLocaleQualifier(config)) {
-                if (!isApp) {
-                    if (!outLocales.contains(config)) {
-                        logWarn(project, "Manually specified resConfig language '{}' on {} will be ignored! See: {}",
-                                config, project.getName(), "https://github.com/amake/gradle-android-l10n-fix-plugin#limitations");
-                    }
-                    continue;
-                }
-                boolean changed = outLocales.add(config);
-                if (changed) {
-                    logInfo(project, "Detected manual resConfig: {}", config);
-                }
+                outLocales.add(config);
             }
         }
     }
