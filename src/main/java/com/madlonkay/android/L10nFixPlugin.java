@@ -37,7 +37,6 @@ public class L10nFixPlugin implements Plugin<Project> {
     private static final String SUPPORTED_LOCALES_FIELD_TYPE = "String[]";
 
     private static final Set<String> RES_LOCALES = new HashSet<>();
-    private static final Set<String> BCP47_LOCALES = new HashSet<>();
 
     private int verbosity;
 
@@ -63,22 +62,25 @@ public class L10nFixPlugin implements Plugin<Project> {
 
         // The rest must be done after evaluation so that the extensions can be initialized
         project.afterEvaluate(proj -> {
-            // Check for locales that couldn't be detected by [resolveLocalesFileSystem]
+            // Gather the actual configured resConfig values
+            Set<String> resConfigLocales = new HashSet<>();
+            iterPlugins(proj, plugin ->
+                    resolveConfiguredLocales(proj, plugin, resConfigLocales));
+
+            // Check for locales that aren't configured
             Set<String> missingLocales = new HashSet<>();
             iterPlugins(proj, plugin -> resolveLocalesActual(proj, plugin, missingLocales));
-            missingLocales.removeAll(RES_LOCALES);
+            missingLocales.removeAll(resConfigLocales);
             if (!missingLocales.isEmpty()) {
-                logWarn(proj, "Project contains resources with locales that must be manually specified in `resConfigs`: {}", missingLocales);
+                logWarn(proj, "Locales missing from resConfigs: {}", missingLocales);
             }
 
-            iterProjects(proj, p ->
-                    iterPlugins(p, plugin ->
-                            resolveConfiguredLocales(p, plugin, RES_LOCALES)));
-            Util.transformInto(RES_LOCALES, Util::toBcp47, BCP47_LOCALES);
-            BCP47_LOCALES.add(getDefaultLocale(proj, extension));
-            iterProjects(proj, p ->
-                    iterVariants(p, variant ->
-                            setBuildConfigField(p, variant, Collections.unmodifiableSet(BCP47_LOCALES))));
+            // Set the supported locales BuildConfig array
+            Set<String> bcp47Locales = new HashSet<>(resConfigLocales.size());
+            Util.transformInto(resConfigLocales, Util::toBcp47, bcp47Locales);
+            bcp47Locales.add(getDefaultLocale(proj, extension));
+            iterVariants(proj, variant ->
+                    setBuildConfigField(proj, variant, Collections.unmodifiableSet(bcp47Locales)));
         });
     }
 
