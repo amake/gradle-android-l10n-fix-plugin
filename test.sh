@@ -22,7 +22,7 @@ function resgrep() {
 ! resgrep "config pt" ||
     (resgrep "config" && die "APK included test-only resources")
 
-resgrep "type 10 configCount=8" ||
+resgrep "type 10 configCount=10" ||
     (resgrep "config" && die "APK had wrong number of language resources")
 
 echo "Tests complete"
