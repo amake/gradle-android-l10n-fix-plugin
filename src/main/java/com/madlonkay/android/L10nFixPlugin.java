@@ -115,7 +115,8 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     private void resolveLocalesFileSystem(Project project, Collection<String> outLocales) {
         ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
-        tree.include("**/res/**");
+        tree.include("**/values/**");
+        tree.include("**/values-*/**");
         tree.exclude("**/build/**", "**/test/**", "**/androidTest/**");
         logDebug(project, "Inspecting file tree: {}", tree);
         for (File file : tree.getFiles()) {
