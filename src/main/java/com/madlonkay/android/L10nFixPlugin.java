@@ -63,6 +63,14 @@ public class L10nFixPlugin implements Plugin<Project> {
 
         // The rest must be done after evaluation so that the extensions can be initialized
         project.afterEvaluate(proj -> {
+            // Check for locales that couldn't be detected by [resolveLocalesFileSystem]
+            Set<String> missingLocales = new HashSet<>();
+            iterPlugins(proj, plugin -> resolveLocalesActual(proj, plugin, missingLocales));
+            missingLocales.removeAll(RES_LOCALES);
+            if (!missingLocales.isEmpty()) {
+                logWarn(proj, "Project contains resources with locales that must be manually specified in `resConfigs`: {}", missingLocales);
+            }
+
             iterProjects(proj, p ->
                     iterPlugins(p, plugin ->
                             resolveConfiguredLocales(p, plugin, RES_LOCALES)));
