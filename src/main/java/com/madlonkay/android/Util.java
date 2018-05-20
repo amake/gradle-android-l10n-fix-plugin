@@ -20,6 +20,15 @@ public class Util {
         return LOCALE_RESOURCE_PATTERN.matcher(s).matches();
     }
 
+    public static boolean containsLocaleQualifier(Collection<String> c) {
+        for (String s : c) {
+            if (isLocaleQualifier(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static String resolveLocale(File file) {
         File toResolve = file.isDirectory() ? file : file.getParentFile();
         return resolveLocale(toResolve.getName());

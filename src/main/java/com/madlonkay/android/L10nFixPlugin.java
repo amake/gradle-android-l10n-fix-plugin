@@ -84,9 +84,13 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     private void setResConfigs(Project project, BasePlugin<?> plugin, Collection<String> resLocales) {
         DefaultConfig defaultConfig = plugin.getExtension().getDefaultConfig();
-        defaultConfig.addResourceConfigurations(resLocales);
-        logInfo(project, "Adding resource configurations to {}: {}", project.getName(), resLocales);
-        logDebug(project, "...result: {}", defaultConfig.getResourceConfigurations());
+        if (Util.containsLocaleQualifier(defaultConfig.getResourceConfigurations())) {
+            logInfo(project, "Manual resource configurations present; skipping");
+        } else {
+            defaultConfig.addResourceConfigurations(resLocales);
+            logInfo(project, "Adding resource configurations to {}: {}", project.getName(), resLocales);
+            logDebug(project, "...result: {}", defaultConfig.getResourceConfigurations());
+        }
     }
 
     private String getDefaultLocale(Project project, L10nFixExtension extension) {
