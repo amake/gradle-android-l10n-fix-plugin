@@ -2,9 +2,10 @@
 
 set -euo pipefail
 
+export GRADLE_OPTS=-Dorg.gradle.daemon=false
+
 cd integration
-../gradlew clean --stacktrace
-../gradlew -Pl10nFixVerbosity=1 assembleDebug test --stacktrace
+../gradlew -Pl10nFixVerbosity=1 clean assembleDebug test --stacktrace
 
 aapt=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -n 1)/aapt
 
