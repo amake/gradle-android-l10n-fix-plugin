@@ -124,8 +124,8 @@ public class L10nFixPlugin implements Plugin<Project> {
 
     private void addGenerateCodeTask(Project project, BaseVariant variant) {
         String taskName = Util.makeTaskName("generate", variant.getFlavorName(), variant.getBuildType().getName(), "L10nFix");
-        logDebug(project, "Generating task: {}", taskName);
         GenerateCodeTask task = project.getTasks().create(taskName, GenerateCodeTask.class);
+        logDebug(project, "Generating task: {}", task.getPath());
         task.setBuildConfigPackageName(variant.getGenerateBuildConfig().getBuildConfigPackageName());
         variant.registerJavaGeneratingTask(task, task.getOutputDirectory());
     }
