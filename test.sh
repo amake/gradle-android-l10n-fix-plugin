@@ -4,6 +4,8 @@ set -euo pipefail
 
 export GRADLE_OPTS=-Dorg.gradle.daemon=false
 
+./gradlew clean test --stacktrace
+
 cd integration
 ../gradlew -Pl10nFixVerbosity=1 clean assembleDebug test --stacktrace
 
