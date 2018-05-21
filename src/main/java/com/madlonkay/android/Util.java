@@ -42,7 +42,7 @@ public class Util {
         }
     }
 
-    public static <T> void transformInto(Collection<T> source, Function<T, T> transform, Collection<T> target) {
+    public static <T, R> void transformInto(Collection<T> source, Function<T, R> transform, Collection<R> target) {
         for (T item : source) {
             target.add(transform.apply(item));
         }
