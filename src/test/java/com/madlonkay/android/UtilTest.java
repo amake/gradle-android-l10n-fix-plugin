@@ -25,6 +25,7 @@ public class UtilTest {
     public void resolveLocale() {
         assertNull(Util.resolveLocale(new File("/Users/me/project/")));
         assertNull(Util.resolveLocale(new File("/Users/me/project/res/values/strings.xml")));
+        assertNull(Util.resolveLocale(new File("/Users/me/projects/res/values-v16/strings.xml")));
         assertEquals("ja", Util.resolveLocale(new File("/Users/me/project/res/values-ja/strings.xml")));
         assertEquals("es-rMX", Util.resolveLocale(new File("/Users/me/project/res/values-es-rMX/strings.xml")));
         assertEquals("b+sr+Latn", Util.resolveLocale(new File("/Users/me/project/res/values-b+sr+Latn/strings.xml")));

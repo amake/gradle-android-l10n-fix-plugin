@@ -36,10 +36,12 @@ public class Util {
 
     private static String resolveLocale(String path) {
         if (path.startsWith(LOCALE_PREFIX)) {
-            return path.substring(LOCALE_PREFIX.length());
-        } else {
-            return null;
+            String value = path.substring(LOCALE_PREFIX.length());
+            if (LOCALE_RESOURCE_PATTERN.matcher(value).matches()) {
+                return value;
+            }
         }
+        return null;
     }
 
     public static <T, R> void transformInto(Collection<T> source, Function<T, R> transform, Collection<R> target) {
