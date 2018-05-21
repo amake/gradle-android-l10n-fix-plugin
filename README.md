@@ -75,9 +75,8 @@ This is essentially a reimplementation of `resConfig 'auto'`, which was
 [deprecated in Android Gradle Plugin
 3.1](https://android.googlesource.com/platform/tools/base/+/6b7799c36f1ba5194f73f5c14a7b0365a8428714%5E%21/)
 due to issues with multi-module projects and `aar` libraries. This plugin
-addresses some of the issues, but not all. If your project uses internal
-libraries in `aar` form, see [Limitations](#limitations) for important
-information.
+addresses some of the issues, but not all. See [Limitations](#limitations) for
+important information.
 
 ### Runtime contamination fix
 
@@ -111,15 +110,23 @@ features).
 
 1. Add the plugin to your root project
    ([instructions](https://plugins.gradle.org/plugin/com.madlonkay.android-l10n-fix))
-2. Apply the plugin to your Android projects. These are any projects to which
-   a `com.android.*` plugin is applied.
+2. Apply the plugin to your Android projects. These are any projects to which a
+   `com.android.*` plugin is applied.
     ```
+    android {
+        ...
+    }
+
     apply plugin: 'com.madlonkay.android-l10n-fix'
     ```
-   This activates the compile-time fix. Note:
-    - This plugin should be applied *after* the Android plugin
+   This activates the compile-time fix*. Note:
+    - This plugin should be applied anywhere *after* the `android {}` block
     - Apply this plugin to all Android projects that have locale-specific
       resources
+    - *If you manually set supported locales in `resConfigs`, the plugin will
+      not attempt to automatically detect supported locales. If you want the
+      plugin to set `resConfigs` automatically, be sure to remove any manually
+      set locales. See [Limitations](#limitations) for details.
 3. (Optional) Configure the plugin with a `l10n` block. See below for options.
 4. To activate the runtime fix:
    1. Make your `Activity` classes extend `L10nFixActivity`
@@ -140,7 +147,10 @@ l10n {
 Options:
 
 - `defaultLocale`: The locale for "default" resources (i.e. in `values`, not
-  `values-XX`). This defaults to `en`.
+  `values-XX`). This defaults to `en`. Note that if you need to customize this
+  (your default resources are not in English) you should also copy your
+  resources to the appropriate `values-` directory ([see here,
+  p28](http://www.unicodeconference.org/presentations/TS1T3-Nita-Pournader.pdf)).
 
 ## Limitations
 
@@ -164,11 +174,21 @@ as such:
 > Ultimately the most reliable way to make this work is for the dev to
 > explicitly list what resource to include.
 
-This plugin does correctly handle multiple modules, but it cannot address the
-`aar` issue. It considers `aar`s to be "not yours", so if you have internally
-developed `aar`s that contain language resources not otherwise detectable, you
-should manually list those in `resConfigs` as officially recommended *in your
-main app's `defaultConfig`*.
+This plugin does correctly handle multiple modules if:
+
+- All of your resource locales can be determined by inspecting the filesystem
+(there is a `values-XX` folder for each supported locale)
+- All modules support the set of locales detectable from the filesystem
+
+However it cannot handle:
+
+- Complex setups where different modules support different sets of locales
+- Locales where resources are generated (and not detectable from the filesystem)
+- Locales present only inside `aar`s
+
+If your app has any of the above, you should manually set your supported locales
+in `resConfigs` as officially recommended. When manually set `resConfigs` are
+present, this plugin does not attempt to auto-detect supported locales.
 
 ## License
 
