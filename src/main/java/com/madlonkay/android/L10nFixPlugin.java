@@ -47,7 +47,10 @@ public class L10nFixPlugin implements Plugin<Project> {
         L10nFixExtension extension = project.getExtensions().create("l10n", L10nFixExtension.class);
 
         if (RES_LOCALES.isEmpty()) {
-            // Find all locales indicated by resources in all projects
+            // Find all locales indicated by resources in all projects.
+            // We would like to be able to use resolveLocalesActual here, but we only get one shot to modify a project's
+            // resConfigs and that is before the project has been evaluated, so we can't wait for the Android plugin to
+            // finish being configured.
             iterProjects(project, proj -> resolveLocalesFileSystem(proj, RES_LOCALES));
             logInfo(project, "Detected resource locales in filesystem: {}", RES_LOCALES);
         }
@@ -67,7 +70,9 @@ public class L10nFixPlugin implements Plugin<Project> {
             iterPlugins(proj, plugin ->
                     resolveConfiguredLocales(proj, plugin, resConfigLocales));
 
-            // Check for locales that aren't configured
+            // Check for locales that aren't configured.
+            // This covers the (obscure) case where a locale only appears in generated resources, and the (more likely?)
+            // case where the user has specified only some of the locales manually.
             Set<String> missingLocales = new HashSet<>();
             iterPlugins(proj, plugin -> resolveLocalesActual(proj, plugin, missingLocales));
             missingLocales.removeAll(resConfigLocales);
@@ -115,6 +120,17 @@ public class L10nFixPlugin implements Plugin<Project> {
         variant.buildConfigField(SUPPORTED_LOCALES_FIELD_TYPE, SUPPORTED_LOCALES_FIELD_NAME, fieldValue);
     }
 
+    /**
+     * Inspect a project's files' paths (not contents) to detect languages of included resources.
+     * E.g. {@code res/values-XX/foo.xml} indicates support for language {@code XX}.
+     * <p>
+     * All files in the project are inspected, using heuristics to eliminate false positives e.g.
+     * from dependencies. Unlike {@link #resolveLocalesActual(Project, BasePlugin, Collection)},
+     * this allows it to work at any time, even before the Android plugin has been configured.
+     *
+     * @param project    The project
+     * @param outLocales The collection into which detected locales will be added
+     */
     private void resolveLocalesFileSystem(Project project, Collection<String> outLocales) {
         ConfigurableFileTree tree = project.fileTree(project.getProjectDir());
         tree.include("**/values/**");
@@ -130,6 +146,17 @@ public class L10nFixPlugin implements Plugin<Project> {
         }
     }
 
+    /**
+     * Inspect a project's files' paths (not contents) to detect languages of included resources.
+     * E.g. {@code res/values-XX/foo.xml} indicates support for language {@code XX}.
+     * <p>
+     * Only actual resource files are inspected. Unlike {@link #resolveLocalesFileSystem(Project, Collection)},
+     * this is accurate but can only be run after the Android plugin has been configured.
+     *
+     * @param project    The project
+     * @param plugin     The Android plugin applied to the project
+     * @param outLocales The collection into which detected locales will be added
+     */
     private void resolveLocalesActual(Project project, BasePlugin<?> plugin, Collection<String> outLocales) {
         for (AndroidSourceSet sourceSet : plugin.getExtension().getSourceSets()) {
             AndroidSourceDirectorySet res = sourceSet.getRes();
