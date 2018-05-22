@@ -195,9 +195,11 @@ public class L10nFixPlugin implements Plugin<Project> {
     private void logWarn(Project project, String format, Object... args) {
         log(project, LogLevel.WARN, format, args);
     }
+
     private void logInfo(Project project, String format, Object... args) {
         log(project, LogLevel.INFO, format, args);
     }
+
     private void logDebug(Project project, String format, Object... args) {
         log(project, LogLevel.DEBUG, format, args);
     }
