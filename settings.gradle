@@ -8,3 +8,4 @@
  */
 
 rootProject.name = 'gradle-android-l10n-fix-plugin'
+enableFeaturePreview('STABLE_PUBLISHING')
