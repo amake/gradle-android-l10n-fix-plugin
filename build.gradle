@@ -19,8 +19,14 @@ version = PLUGIN_VERSION
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+ext {
+    androidPluginCoords = 'com.android.tools.build:gradle:3.1.2'
+}
+
 dependencies {
-    implementation 'com.android.tools.build:gradle:3.1.2'
+    implementation androidPluginCoords
+    annotationProcessor androidPluginCoords
+    testAnnotationProcessor androidPluginCoords
     implementation 'com.squareup:javapoet:1.11.1'
     testImplementation 'junit:junit:4.12'
 }
