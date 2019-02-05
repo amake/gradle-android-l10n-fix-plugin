@@ -1,13 +1,12 @@
 package com.madlonkay.android;
 
-import com.android.utils.StringHelper;
-
 import org.gradle.api.Project;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -68,7 +67,9 @@ public class Util {
     static String makeTaskName(String prefix, String... words) {
         StringBuilder sb = new StringBuilder(prefix);
         for (String word : words) {
-            StringHelper.appendCapitalized(sb, word);
+            if (!word.isEmpty()) {
+                sb.append(word.substring(0, 1).toUpperCase(Locale.US)).append(word.substring(1));
+            }
         }
         return sb.toString();
     }
